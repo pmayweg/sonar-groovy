@@ -25,6 +25,7 @@ import org.sonar.api.Plugin;
 import org.sonar.api.Properties;
 import org.sonar.api.Property;
 import org.sonar.plugins.groovy.cobertura.CoberturaMavenPluginHandler;
+import org.sonar.plugins.groovy.cobertura.CoberturaMavenInitializer;
 import org.sonar.plugins.groovy.cobertura.CoberturaSensor;
 import org.sonar.plugins.groovy.codenarc.*;
 import org.sonar.plugins.groovy.foundation.Groovy;
@@ -80,6 +81,7 @@ public class GroovyPlugin implements Plugin {
 
         // Cobertura
         CoberturaSensor.class,
+        CoberturaMavenInitializer.class,
         CoberturaMavenPluginHandler.class,
         // Surefire
         SurefireSensor.class);
