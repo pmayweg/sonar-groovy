@@ -31,22 +31,15 @@ import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CoberturaSensorTest {
+public class CoberturaMavenInitializerTest {
 
-  private CoberturaSensor sensor;
+  private CoberturaMavenPluginHandler mavenPluginHandler;
+  private CoberturaMavenInitializer initializer;
 
   @Before
   public void setUp() throws Exception {
-    sensor = new CoberturaSensor();
-  }
-
-  /**
-   * See SONARPLUGINS-696
-   */
-  @Test
-  public void should_parse_report() {
-    SensorContext context = mock(SensorContext.class);
-    sensor.parseReport(TestUtils.getResource(getClass(), "coverage.xml"), context);
+    mavenPluginHandler = mock(CoberturaMavenPluginHandler.class);
+    initializer = new CoberturaMavenInitializer(mavenPluginHandler);
   }
 
   @Test
@@ -54,9 +47,11 @@ public class CoberturaSensorTest {
     Project project = mock(Project.class);
     when(project.getLanguageKey()).thenReturn(Groovy.KEY);
     when(project.getAnalysisType()).thenReturn(Project.AnalysisType.REUSE_REPORTS);
-    assertThat(sensor.shouldExecuteOnProject(project)).isTrue();
+    assertThat(initializer.shouldExecuteOnProject(project)).isTrue();
+    assertThat(initializer.getMavenPluginHandler(project)).isNull();
     when(project.getAnalysisType()).thenReturn(Project.AnalysisType.DYNAMIC);
-    assertThat(sensor.shouldExecuteOnProject(project)).isTrue();
+    assertThat(initializer.shouldExecuteOnProject(project)).isTrue();
+    assertThat(initializer.getMavenPluginHandler(project)).isSameAs(mavenPluginHandler);
   }
 
   @Test
@@ -64,7 +59,7 @@ public class CoberturaSensorTest {
     Project project = mock(Project.class);
     when(project.getLanguageKey()).thenReturn(Groovy.KEY);
     when(project.getAnalysisType()).thenReturn(Project.AnalysisType.STATIC);
-    assertThat(sensor.shouldExecuteOnProject(project)).isFalse();
+    assertThat(initializer.shouldExecuteOnProject(project)).isFalse();
   }
 
   @Test
@@ -72,12 +67,7 @@ public class CoberturaSensorTest {
     Project project = mock(Project.class);
     when(project.getLanguageKey()).thenReturn("java");
     when(project.getAnalysisType()).thenReturn(Project.AnalysisType.DYNAMIC);
-    assertThat(sensor.shouldExecuteOnProject(project)).isFalse();
-  }
-
-  @Test
-  public void test_toString() {
-    assertThat(sensor.toString()).isEqualTo("Groovy CoberturaSensor");
+    assertThat(initializer.shouldExecuteOnProject(project)).isFalse();
   }
 
 }
