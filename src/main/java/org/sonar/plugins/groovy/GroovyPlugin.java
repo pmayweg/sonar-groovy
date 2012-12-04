@@ -72,8 +72,8 @@ public class GroovyPlugin extends SonarPlugin {
         GroovySensor.class,
 
         // Cobertura
-//        CoberturaSensor.class,
-//        CoberturaMavenPluginHandler.class,
+        CoberturaSensor.class,
+        CoberturaMavenPluginHandler.class,
         // Clover
         CloverSensor.class,
         // Surefire
