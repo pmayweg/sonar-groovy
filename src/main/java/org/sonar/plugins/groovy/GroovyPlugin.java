@@ -36,14 +36,23 @@ import org.sonar.plugins.groovy.foundation.GroovyColorizerFormat;
 import org.sonar.plugins.groovy.foundation.GroovyCpdMapping;
 import org.sonar.plugins.groovy.foundation.GroovySourceImporter;
 import org.sonar.plugins.groovy.surefire.SurefireSensor;
+import org.sonar.plugins.groovy.jacoco.*;
 
 import java.util.List;
 
 @Properties({
   @Property(
     key = GroovyPlugin.CODENARC_REPORT_PATH,
-    name = "Report file",
+    name = "Codenarc Report file",
     description = "Path (absolute or relative) to CodeNarc XML report in case generation is not handle by the plugin.",
+    module = true,
+    project = true,
+    global = false
+  ),
+  @Property(
+    key = GroovyPlugin.JACOCO_REPORT_PATH,
+    name = "Jacoco Report file",
+    description = "Path (absolute or relative) to Jacoco EXEC report in case generation is not handle by the plugin.",
     module = true,
     project = true,
     global = false
@@ -51,6 +60,7 @@ import java.util.List;
 })
 public class GroovyPlugin extends SonarPlugin {
 
+  public static final String JACOCO_REPORT_PATH = "sonar.groovy.jacoco.reportPath";
   public static final String CODENARC_REPORT_PATH = "sonar.groovy.codenarc.reportPath";
 
   public List<?> getExtensions() {
@@ -73,6 +83,17 @@ public class GroovyPlugin extends SonarPlugin {
         // Cobertura
         CoberturaSensor.class,
         CoberturaMavenPluginHandler.class,
+
+        // jacoco
+        JacocoConfiguration.class,
+        JaCoCoAgentDownloader.class,
+        JacocoAntInitializer.class,
+        JacocoMavenInitializer.class,
+        JaCoCoMavenPluginHandler.class,
+        JaCoCoSensor.class,
+        JaCoCoItSensor.class,
+        JaCoCoOverallSensor.class,
+
         // Surefire
         SurefireSensor.class);
   }

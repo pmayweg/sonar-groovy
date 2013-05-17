@@ -28,6 +28,7 @@ import org.sonar.api.resources.Project;
 import org.sonar.api.resources.ProjectFileSystem;
 import org.sonar.api.test.IsMeasure;
 import org.sonar.plugins.groovy.foundation.Groovy;
+import org.sonar.plugins.groovy.jacoco.GroovyFile;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -71,7 +72,7 @@ public class GroovySensorTest {
 
     sensor.analyse(project, context);
 
-    File sonarFile = File.fromIOFile(new java.io.File(sourceDir, "Greeting.groovy"), sourceDirs);
+    GroovyFile sonarFile = GroovyFile.fromIOFile(new java.io.File(sourceDir, "Greeting.groovy"), sourceDirs, false);
     verify(context).saveMeasure(sonarFile, CoreMetrics.FILES, 1.0);
     verify(context).saveMeasure(sonarFile, CoreMetrics.CLASSES, 2.0);
     verify(context).saveMeasure(sonarFile, CoreMetrics.FUNCTIONS, 2.0);

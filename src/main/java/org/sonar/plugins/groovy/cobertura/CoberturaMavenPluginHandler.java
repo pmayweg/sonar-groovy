@@ -73,7 +73,7 @@ public class CoberturaMavenPluginHandler implements MavenPluginHandler {
       }
       coberturaPlugin.addParameter("instrumentation/excludes/exclude", pattern);
     }
-    coberturaPlugin.setParameter("maxmem", settings.getString(CoreProperties.COBERTURA_MAXMEM_PROPERTY));
+    coberturaPlugin.setParameter("maxmem", settings.getString("sonar.cobertura.maxmen"));
   }
 
 }

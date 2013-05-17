@@ -17,36 +17,20 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
  */
+package org.sonar.plugins.groovy.jacoco;
 
-package org.sonar.plugins.groovy.foundation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import net.sourceforge.pmd.cpd.Tokenizer;
-import org.sonar.api.batch.AbstractCpdMapping;
-import org.sonar.api.resources.Language;
-import org.sonar.api.resources.Resource;
-import org.sonar.plugins.groovy.jacoco.GroovyFile;
+public final class JaCoCoUtils {
 
-import java.io.File;
-import java.util.List;
-
-public class GroovyCpdMapping extends AbstractCpdMapping {
-
-  private final Groovy language;
-
-  public GroovyCpdMapping(Groovy language) {
-    this.language = language;
+  /**
+   * Utility class constructor.
+   */
+  private JaCoCoUtils() {
   }
 
-  public Resource createResource(java.io.File file, List<File> sourceDirs) {
-    return GroovyFile.fromIOFile(file, sourceDirs, false);
-  }
-
-  public Tokenizer getTokenizer() {
-    return new GroovyCpdTokenizer();
-  }
-
-  public Language getLanguage() {
-    return language;
-  }
+  public static final String PLUGIN_KEY = "jacoco";
+  public static final Logger LOG = LoggerFactory.getLogger(JaCoCoUtils.class.getName());
 
 }

@@ -41,6 +41,7 @@ import org.sonar.api.resources.ProjectFileSystem;
 import org.sonar.plugins.groovy.foundation.Groovy;
 import org.sonar.plugins.groovy.foundation.GroovyRecognizer;
 import org.sonar.plugins.groovy.gmetrics.CustomSourceAnalyzer;
+import org.sonar.plugins.groovy.jacoco.GroovyFile;
 import org.sonar.squid.measures.Metric;
 import org.sonar.squid.text.Source;
 
@@ -86,12 +87,12 @@ public class GroovySensor implements Sensor {
     for (Entry<File, Collection<ClassResultsNode>> entry : analyzer.getResultsByFile().asMap().entrySet()) {
       File file = entry.getKey();
       Collection<ClassResultsNode> results = entry.getValue();
-      org.sonar.api.resources.File sonarFile = org.sonar.api.resources.File.fromIOFile(file, project.getFileSystem().getSourceDirs());
+      GroovyFile sonarFile = GroovyFile.fromIOFile(file, project.getFileSystem().getSourceDirs(), false);
       processFile(context, sonarFile, results);
     }
   }
 
-  private void processFile(SensorContext context, org.sonar.api.resources.File sonarFile, Collection<ClassResultsNode> results) {
+  private void processFile(SensorContext context, GroovyFile sonarFile, Collection<ClassResultsNode> results) {
     double classes = 0;
     double methods = 0;
     double complexity = 0;
@@ -139,7 +140,7 @@ public class GroovySensor implements Sensor {
     for (File groovyFile : fileSystem.getSourceFiles(groovy)) {
       try {
         reader = new StringReader(FileUtils.readFileToString(groovyFile, fileSystem.getSourceCharset().name()));
-        org.sonar.api.resources.File resource = org.sonar.api.resources.File.fromIOFile(groovyFile, fileSystem.getSourceDirs());
+        GroovyFile resource = GroovyFile.fromIOFile(groovyFile, fileSystem.getSourceDirs(), false);
         Source source = new Source(reader, new GroovyRecognizer());
         packageList.add(new org.sonar.api.resources.Directory(resource.getParent().getKey()));
         sensorContext.saveMeasure(resource, CoreMetrics.LINES, (double) source.getMeasure(Metric.LINES));
