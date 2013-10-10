@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>sonar-groovy-plugin</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>20130816.00.50</version>
   <packaging>sonar-plugin</packaging>
 
   <name>Sonar Groovy Plugin</name>
@@ -51,12 +51,17 @@
   </issueManagement>
 
   <properties>
-    <sonar.version>3.0</sonar.version>
+    <sonar.version>3.5.1</sonar.version>
     <sonar.pluginName>Groovy</sonar.pluginName>
     <sonar.pluginClass>org.sonar.plugins.groovy.GroovyPlugin</sonar.pluginClass>
   </properties>
 
   <dependencies>
+    <dependency>
+        <groupId>org.codehaus.sonar-plugins.java</groupId>
+         <artifactId>sonar-java-plugin</artifactId>
+         <version>1.2</version>
+    </dependency>
     <dependency>
       <groupId>org.codehaus.sonar</groupId>
       <artifactId>sonar-plugin-api</artifactId>
@@ -64,21 +69,47 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.sonar</groupId>
+      <artifactId>sonar-batch</artifactId>
+      <version>${sonar.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.codehaus.sonar.plugins</groupId>
+        <artifactId>sonar-java-plugin</artifactId>
+        <version>3.2.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.ant</groupId>
+        <artifactId>ant</artifactId>
+        <version>1.8.2</version>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.sonar.plugins</groupId>
       <artifactId>sonar-surefire-plugin</artifactId>
-      <version>${sonar.version}</version>
+      <version>3.2.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.codehaus.sonar.plugins</groupId>
       <artifactId>sonar-cobertura-plugin</artifactId>
-      <version>${sonar.version}</version>
+      <version>3.2.1</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.sonar.plugins</groupId>
+      <artifactId>sonar-jacoco-plugin</artifactId>
+      <version>3.2.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jacoco</groupId>
+        <artifactId>org.jacoco.core</artifactId>
+        <version>0.6.2.201302030002</version>
     </dependency>
     <dependency>
       <groupId>org.codenarc</groupId>
       <artifactId>CodeNarc</artifactId>
-      <version>0.17</version>
+      <version>0.18.1</version>
       <exclusions>
         <exclusion>
           <groupId>log4j</groupId>

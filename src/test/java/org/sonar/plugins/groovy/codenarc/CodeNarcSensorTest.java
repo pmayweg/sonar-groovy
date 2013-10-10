@@ -74,9 +74,9 @@ public class CodeNarcSensorTest {
   }
 
   @Test
-  public void should_not_execute_on_java_project() {
+  public void should_not_execute_on_groovy_project() {
     Project project = mock(Project.class);
-    when(project.getLanguageKey()).thenReturn("java");
+    when(project.getLanguageKey()).thenReturn(Groovy.KEY);
     assertThat(sensor.shouldExecuteOnProject(project)).isFalse();
   }
 

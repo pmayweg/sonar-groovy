@@ -20,17 +20,60 @@
 
 package org.sonar.plugins.groovy.foundation;
 
+import java.io.File;
+import java.nio.charset.Charset;
+import java.util.List;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.io.Files;
+
 import org.sonar.api.batch.AbstractSourceImporter;
+import org.sonar.api.batch.SensorContext;
+import org.sonar.api.resources.ProjectFileSystem;
+import org.sonar.api.resources.Qualifiers;
+import org.sonar.api.resources.Resource;
+import org.sonar.api.utils.SonarException;
+import org.sonar.plugins.groovy.jacoco.GroovyFile;
 
 public class GroovySourceImporter extends AbstractSourceImporter {
 
-  public GroovySourceImporter(Groovy groovy) {
-    super(groovy);
-  }
+    public GroovySourceImporter(Groovy groovy) {
+        super(groovy);
+    }
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName();
-  }
+    protected void analyse(ProjectFileSystem fileSystem, SensorContext context) {
+        parseDirs(context, fileSystem.getSourceFiles(Groovy.INSTANCE), fileSystem.getSourceDirs(), false,
+                fileSystem.getSourceCharset());
+        parseDirs(context, fileSystem.getTestFiles(Groovy.INSTANCE), fileSystem.getTestDirs(), true,
+                fileSystem.getSourceCharset());
+    }
+
+    protected void parseDirs(SensorContext context, List<File> files, List<File> sourceDirs, boolean unitTest,
+            Charset sourcesEncoding) {
+        for (File file : files) {
+            Resource resource = createResource(file, sourceDirs, unitTest);
+            if (resource != null) {
+                try {
+                    context.index(resource);
+                    String source = Files.toString(file, Charset.forName(sourcesEncoding.name()));
+                    // SONAR-3860 Remove BOM character from source
+                    source = CharMatcher.anyOf("\uFEFF").removeFrom(source);
+                    context.saveSource(resource, source);
+                } catch (Exception e) {
+                    throw new SonarException("Unable to read and import the source file : '" + file.getAbsolutePath()
+                            + "' with the charset : '" + sourcesEncoding.name() + "'.", e);
+                }
+            }
+        }
+    }
+
+    protected Resource createResource(File file, List<File> sourceDirs, boolean unitTest) {
+        return GroovyFile.fromIOFile(file, sourceDirs, unitTest);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
 
 }

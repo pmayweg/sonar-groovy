@@ -17,36 +17,6 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
  */
+@javax.annotation.ParametersAreNonnullByDefault
+package org.sonar.plugins.groovy.jacoco;
 
-package org.sonar.plugins.groovy.foundation;
-
-import net.sourceforge.pmd.cpd.Tokenizer;
-import org.sonar.api.batch.AbstractCpdMapping;
-import org.sonar.api.resources.Language;
-import org.sonar.api.resources.Resource;
-import org.sonar.plugins.groovy.jacoco.GroovyFile;
-
-import java.io.File;
-import java.util.List;
-
-public class GroovyCpdMapping extends AbstractCpdMapping {
-
-  private final Groovy language;
-
-  public GroovyCpdMapping(Groovy language) {
-    this.language = language;
-  }
-
-  public Resource createResource(java.io.File file, List<File> sourceDirs) {
-    return GroovyFile.fromIOFile(file, sourceDirs, false);
-  }
-
-  public Tokenizer getTokenizer() {
-    return new GroovyCpdTokenizer();
-  }
-
-  public Language getLanguage() {
-    return language;
-  }
-
-}

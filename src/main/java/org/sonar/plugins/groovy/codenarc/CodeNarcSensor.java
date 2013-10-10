@@ -39,6 +39,7 @@ import org.sonar.api.utils.SonarException;
 import org.sonar.plugins.groovy.GroovyPlugin;
 import org.sonar.plugins.groovy.codenarc.CodeNarcXMLParser.CodeNarcViolation;
 import org.sonar.plugins.groovy.foundation.Groovy;
+import org.sonar.plugins.groovy.jacoco.GroovyFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class CodeNarcSensor implements Sensor {
             .withConfigKey(violation.getRuleName());
         Rule rule = ruleFinder.find(ruleQuery);
         if (rule != null) {
-          org.sonar.api.resources.File sonarFile = new org.sonar.api.resources.File(violation.getFilename());
+          GroovyFile sonarFile = GroovyFile.fromRelativePath(violation.getFilename(), violation.getFilename().contains("test/") ? true : false);
           context.saveViolation(Violation.create(rule, sonarFile).setLineId(violation.getLine()).setMessage(violation.getMessage()));
         } else {
           LOG.warn("No such rule in Sonar, so violation from CodeNarc will be ignored: ", violation.getRuleName());

@@ -72,9 +72,9 @@ public class CoberturaSensorTest {
   }
 
   @Test
-  public void should_not_execute_on_java_project() {
+  public void should_not_execute_on_groovy_project() {
     Project project = mock(Project.class);
-    when(project.getLanguageKey()).thenReturn("java");
+    when(project.getLanguageKey()).thenReturn(Groovy.KEY);
     when(project.getAnalysisType()).thenReturn(Project.AnalysisType.DYNAMIC);
     assertThat(sensor.shouldExecuteOnProject(project)).isFalse();
   }

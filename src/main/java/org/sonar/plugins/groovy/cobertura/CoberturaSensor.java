@@ -33,6 +33,7 @@ import org.sonar.api.resources.Resource;
 import org.sonar.plugins.cobertura.api.AbstractCoberturaParser;
 import org.sonar.plugins.cobertura.api.CoberturaUtils;
 import org.sonar.plugins.groovy.foundation.Groovy;
+import org.sonar.plugins.groovy.jacoco.GroovyFile;
 
 import java.io.File;
 
@@ -72,8 +73,8 @@ public class CoberturaSensor implements Sensor, DependsUponMavenPlugin, Coverage
   private static final AbstractCoberturaParser COBERTURA_PARSER = new AbstractCoberturaParser() {
     @Override
     protected Resource<?> getResource(String fileName) {
-      fileName = fileName.replace(".", "/") + ".groovy";
-      return new org.sonar.api.resources.File(fileName);
+      fileName = fileName.replace(".", "/");
+      return new GroovyFile(fileName);
     }
   };
 

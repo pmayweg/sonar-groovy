@@ -2010,4 +2010,10 @@
     <description><![CDATA[Instead of nested collect{}-calls use collectNested{}]]></description>
   </rule>
 
+  <rule key="org.codenarc.rule.formatting.PublicMethodJavadocRule" priority="MAJOR">
+      <name><![CDATA[Public Method Javadoc]]></name>
+      <configKey><![CDATA[PublicMethodJavadoc]]></configKey>
+      <description><![CDATA[Public methods must have javadoc comments.]]></description>
+  </rule>
+
 </rules>
