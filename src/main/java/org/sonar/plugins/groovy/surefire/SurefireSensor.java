@@ -62,10 +62,11 @@ public class SurefireSensor implements Sensor {
   private static final AbstractSurefireParser SUREFIRE_PARSER = new AbstractSurefireParser() {
     @Override
     protected Resource<?> getUnitTestResource(String classKey) {
-      String filename = classKey.replace('.', '/') + ".groovy";
-      GroovyFile sonarFile = new GroovyFile(filename, true);
+      //String filename = classKey.replace('.', '/') + ".groovy";
+      GroovyFile sonarFile = new GroovyFile(classKey, true);
       return sonarFile;
     }
+
   };
 
   @Override

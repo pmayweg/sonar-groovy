@@ -94,7 +94,7 @@ public class CodeNarcSensor implements Sensor {
             .withConfigKey(violation.getRuleName());
         Rule rule = ruleFinder.find(ruleQuery);
         if (rule != null) {
-          GroovyFile sonarFile = new GroovyFile(violation.getFilename());
+          GroovyFile sonarFile = GroovyFile.fromRelativePath(violation.getFilename(), violation.getFilename().contains("test/") ? true : false);
           context.saveViolation(Violation.create(rule, sonarFile).setLineId(violation.getLine()).setMessage(violation.getMessage()));
         } else {
           LOG.warn("No such rule in Sonar, so violation from CodeNarc will be ignored: ", violation.getRuleName());

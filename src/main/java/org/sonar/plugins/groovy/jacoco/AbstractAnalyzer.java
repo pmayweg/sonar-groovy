@@ -93,13 +93,13 @@ public abstract class AbstractAnalyzer {
   }
 
   public final void analyse(Project project, SensorContext context) {
-    if (!atLeastOneBinaryDirectoryExists()) {
-      JaCoCoUtils.LOG.info("Project coverage is set to 0% since there is no directories with classes.");
+    if (!atLeastOneBinaryDirectoryExists(project)) {
+      JaCoCoUtils.LOG.warn("Project coverage is set to 0% since there is no directories with classes.");
       return;
     }
     String path = getReportPath(project);
     if (path == null) {
-        JaCoCoUtils.LOG.info("No jacoco coverage execution file found for project " + project.getName() + ".");
+        JaCoCoUtils.LOG.warn("No jacoco coverage execution file found for project " + project.getName() + ".");
         return;
     }
     File jacocoExecutionData = pathResolver.relativeFile(fileSystem.baseDir(), path);
@@ -112,8 +112,12 @@ public abstract class AbstractAnalyzer {
     }
   }
 
-  private boolean atLeastOneBinaryDirectoryExists() {
+  private boolean atLeastOneBinaryDirectoryExists(Project project) {
+    if (fileSystem.binaryDirs() == null || fileSystem.binaryDirs().isEmpty()) {
+        JaCoCoUtils.LOG.warn("No binary directories defined for project " + project.getName() + ".");
+    }
     for (File binaryDir : fileSystem.binaryDirs()) {
+      JaCoCoUtils.LOG.info("\tChecking binary directory: {}", binaryDir.toString());
       if (binaryDir.exists()) {
         return true;
       }
@@ -125,7 +129,7 @@ public abstract class AbstractAnalyzer {
     ExecutionDataVisitor executionDataVisitor = new ExecutionDataVisitor();
 
     if (jacocoExecutionData == null || !jacocoExecutionData.exists() || !jacocoExecutionData.isFile()) {
-      JaCoCoUtils.LOG.info("Project coverage is set to 0% as no JaCoCo execution data has been dumped: {}", jacocoExecutionData);
+      JaCoCoUtils.LOG.warn("Project coverage is set to 0% as no JaCoCo execution data has been dumped: {}", jacocoExecutionData);
     } else {
       JaCoCoUtils.LOG.info("Analysing {}", jacocoExecutionData);
 
@@ -157,13 +161,14 @@ public abstract class AbstractAnalyzer {
     if (analyzedResources == 0) {
       JaCoCoUtils.LOG.warn("Coverage information was not collected. Perhaps you forget to include debug information into compiled classes?");
     } else if (collectedCoveragePerTest) {
-      JaCoCoUtils.LOG.info("Information about coverage per test has been collected.");
+      JaCoCoUtils.LOG.warn("Information about coverage per test has been collected.");
     } else {
       JaCoCoUtils.LOG.info("No information about coverage per test.");
     }
   }
 
   private boolean analyzeLinesCoveredByTests(String sessionId, ExecutionDataStore executionDataStore, SensorContext context, WildcardMatcher excludes) {
+    JaCoCoUtils.LOG.info("Checking for test line coverage: " + sessionId);
     int i = sessionId.indexOf(' ');
     if (i < 0) {
       return false;
@@ -172,7 +177,7 @@ public abstract class AbstractAnalyzer {
     String testName = sessionId.substring(i + 1);
     Resource testResource = context.getResource(new GroovyFile(testClassName, true));
     if (testResource == null) {
-      // No such test class
+      JaCoCoUtils.LOG.warn("Failed to find test: " + testClassName);
       return false;
     }
 

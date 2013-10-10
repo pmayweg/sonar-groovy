@@ -19,7 +19,6 @@
  */
 package  org.sonar.plugins.groovy.jacoco;
 
-import org.sonar.api.resources.JavaPackage;
 import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.resources.Resource;
 import org.sonar.api.resources.Language;
@@ -37,13 +36,13 @@ import java.util.List;
  * A class that represents a Groovy class. This class can either be a Test class or source class
  *
  */
-public class GroovyFile extends Resource<JavaPackage> {
+public class GroovyFile extends Resource<GroovyPackage> {
 
   private String filename;
   private String longName;
   private String packageKey;
   private boolean unitTest;
-  private JavaPackage parent;
+  private GroovyPackage parent;
 
   /**
    * Creates a GroovyFile that is not a class of test based on package and file names
@@ -59,63 +58,63 @@ public class GroovyFile extends Resource<JavaPackage> {
    */
   public GroovyFile(String packageKey, String className, boolean unitTest) {
     if (className == null) {
-      throw new IllegalArgumentException("Groovy filename can not be null");
+        throw new IllegalArgumentException("Groovy filename can not be null");
     }
-    this.filename = StringUtils.trim(className) + ".groovy";
+    this.filename = StringUtils.trim(className);
     String key;
     if (StringUtils.isBlank(packageKey)) {
-      this.packageKey = JavaPackage.DEFAULT_PACKAGE_NAME;
-      this.longName = this.filename;
-      key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
+        this.packageKey = GroovyPackage.DEFAULT_PACKAGE_NAME;
+        this.longName = this.filename;
+        key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
     } else {
-      this.packageKey = packageKey.trim();
-      key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
-      this.longName = key;
+        this.packageKey = packageKey.trim();
+        key = new StringBuilder().append(this.packageKey).append(".").append(this.filename).toString();
+        this.longName = key;
     }
     setKey(key);
     this.unitTest = unitTest;
   }
 
-  /**
-   * Creates a source file from its key
-   */
-  public GroovyFile(String key) {
-    this(key, false);
-  }
-
-  /**
-   * Creates any GroovyFile from its key
-   *
-   * @param unitTest whether it is a unit test file or a source file
-   */
-  public GroovyFile(String key, boolean unitTest) {
-    if (key == null) {
-      throw new IllegalArgumentException("Groovy filename can not be null");
+    /**
+     * Creates a source file from its key
+     */
+    public GroovyFile(String key) {
+        this(key, false);
     }
-    String realKey = StringUtils.trim(key);
-    this.unitTest = unitTest;
 
-    if (realKey.contains(".")) {
-      this.filename = StringUtils.substringAfterLast(realKey, ".");
-      this.packageKey = StringUtils.substringBeforeLast(realKey, ".");
-      this.longName = realKey;
+    /**
+     * Creates any GroovyFile from its key
+     *
+     * @param unitTest whether it is a unit test file or a source file
+     */
+    public GroovyFile(String key, boolean unitTest) {
+        if (key == null) {
+            throw new IllegalArgumentException("Groovy filename can not be null");
+        }
+        String realKey = StringUtils.trim(key);
+        this.unitTest = unitTest;
 
-    } else {
-      this.filename = realKey;
-      this.longName = realKey;
-      this.packageKey = JavaPackage.DEFAULT_PACKAGE_NAME;
-      realKey = new StringBuilder().append(JavaPackage.DEFAULT_PACKAGE_NAME).append(".").append(realKey).append(".groovy").toString();
+        if (realKey.contains(".")) {
+            this.filename = StringUtils.substringAfterLast(realKey, ".");
+            this.packageKey = StringUtils.substringBeforeLast(realKey, ".");
+            this.longName = realKey;
+
+        } else {
+            this.filename = realKey;
+            this.longName = realKey;
+            this.packageKey = GroovyPackage.DEFAULT_PACKAGE_NAME;
+            realKey = new StringBuilder().append(GroovyPackage.DEFAULT_PACKAGE_NAME).append(".").append(realKey).toString();
+        }
+        setKey(realKey);
     }
-    setKey(realKey);
-  }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public JavaPackage getParent() {
+  public GroovyPackage getParent() {
     if (parent == null) {
-      parent = new JavaPackage(packageKey);
+      parent = new GroovyPackage(packageKey);
     }
     return parent;
 
@@ -130,7 +129,7 @@ public class GroovyFile extends Resource<JavaPackage> {
   }
 
   /**
-   * @return Java
+   * @return Groovy
    */
   @Override
   public Language getLanguage() {

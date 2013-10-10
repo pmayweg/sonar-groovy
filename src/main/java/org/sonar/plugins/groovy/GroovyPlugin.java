@@ -56,11 +56,21 @@ import java.util.List;
     module = true,
     project = true,
     global = false
+  ),
+    @Property(
+    key = GroovyPlugin.JACOCO_IT_REPORT_PATH,
+    name = "Jacoco Integration Test Report file",
+    description = "Path (absolute or relative) to Jacoco EXEC report in case generation is not handle by the plugin.",
+    module = true,
+    project = true,
+    global = false
   )
+
 })
 public class GroovyPlugin extends SonarPlugin {
 
   public static final String JACOCO_REPORT_PATH = "sonar.groovy.jacoco.reportPath";
+  public static final String JACOCO_IT_REPORT_PATH = "sonar.groovy.jacoco.reportPath";
   public static final String CODENARC_REPORT_PATH = "sonar.groovy.codenarc.reportPath";
 
   public List<?> getExtensions() {
