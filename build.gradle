@@ -1,0 +1,74 @@
+apply plugin: 'groovy'
+apply plugin: 'idea'
+
+tasks.idea.dependsOn(cleanIdea)
+
+version = 'excentric-0.6-DEV'
+targetCompatibility = '1.6'
+sourceCompatibility = '1.6'
+ext.sonarVersion = '3.0'
+
+repositories.mavenCentral()
+
+configurations.add('bundled') {
+    transitive = false
+}
+
+dependencies {
+    groovy group: 'org.codehaus.groovy', name: 'groovy-all', version: '1.7.5'
+
+    bundled group: 'org.codenarc', name: 'CodeNarc', version: '0.17'
+    bundled group: 'org.gmetrics', name: 'GMetrics', version: '0.5'
+    bundled group: 'org.codehaus.sonar.common-rules', name: 'sonar-common-rules', version: '1.0.1', ext: 'jar'
+    bundled configurations.groovy
+
+    compile group: 'org.codehaus.sonar', name: 'sonar-plugin-api', version: sonarVersion
+    compile group: 'org.codehaus.sonar.plugins', name: 'sonar-surefire-plugin', version: sonarVersion, ext: 'jar'
+    compile group: 'org.codehaus.sonar.plugins', name: 'sonar-cobertura-plugin', version: sonarVersion, ext: 'jar'
+
+    compile group: 'commons-httpclient', name: 'commons-httpclient', version: '3.1'
+    compile group: 'org.codehaus.sonar', name: 'sonar-ws-client', version: sonarVersion
+
+    compile configurations.bundled
+
+    testCompile group: 'org.codehaus.sonar', name: 'sonar-testing-harness', version: sonarVersion
+    testCompile group: 'org.codehaus.sonar', name: 'sonar-update-center-common', version: '1.0'
+    testCompile group: 'junit', name: 'junit', version: '4.10'
+    testCompile group: 'org.easytesting', name: 'fest-assert', version: '1.4'
+    testCompile group: 'org.apache.maven', name: 'maven-project', version: '2.0.7'
+}
+
+jar {
+    manifest {
+        attributes([
+                'Plugin-Class': 'org.sonar.plugins.groovy.GroovyPlugin',
+                'Plugin-Dependencies': 'META-INF/lib/GMetrics-0.5.jar META-INF/lib/CodeNarc-0.17.jar META-INF/lib/sonar-common-rules-1.0.1.jar META-INF/lib/groovy-all-1.7.5.jar',
+                'Sonar-Version': sonarVersion,
+                'Plugin-Key': 'groovy',
+                'Plugin-Name': 'Groovy',
+                'Plugin-Version': version,
+                'Plugin-ChildFirstClassLoader': 'true',
+        ])
+    }
+    metaInf {
+        into 'lib'
+        from configurations.bundled
+    }
+}
+
+idea.project.ipr.withXml { root ->
+    // git version control
+    def mapping = root.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping
+    mapping.@vcs = 'Git'
+    mapping.@directory = '$PROJECT_DIR$'
+
+    // removes all compiler resource pattern exclusions so groovy file resources are available from IntelliJ
+    def compilerConfig = root.node.component.find { it.@name == 'CompilerConfiguration' }
+    def resourcePatterns = compilerConfig.wildcardResourcePatterns[0]
+    resourcePatterns.entry.each { resourcePatterns.remove(it) }
+    resourcePatterns.append(new XmlParser().parseText('<entry name="*"/>'))
+}
+
+//task wrapper(type: Wrapper) {
+//    gradleVersion = '1.3'
+//}

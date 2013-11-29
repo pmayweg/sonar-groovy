@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import org.sonar.api.Properties;
 import org.sonar.api.Property;
 import org.sonar.api.SonarPlugin;
+import org.sonar.plugins.groovy.clover.CloverSensor;
 import org.sonar.plugins.groovy.cobertura.CoberturaMavenPluginHandler;
 import org.sonar.plugins.groovy.cobertura.CoberturaSensor;
 import org.sonar.plugins.groovy.codenarc.CodeNarcProfileExporter;
@@ -73,6 +74,8 @@ public class GroovyPlugin extends SonarPlugin {
         // Cobertura
         CoberturaSensor.class,
         CoberturaMavenPluginHandler.class,
+        // Clover
+        CloverSensor.class,
         // Surefire
         SurefireSensor.class);
   }
