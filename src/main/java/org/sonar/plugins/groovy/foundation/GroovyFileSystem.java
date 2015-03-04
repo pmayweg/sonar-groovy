@@ -47,7 +47,8 @@ public class GroovyFileSystem {
 
   @CheckForNull
   public static InputFile inputFileFromRelativePath(String relativePath, FileSystem fileSystem) {
-    return fileSystem.inputFile(fileSystem.predicates().matchesPathPattern("**/" + relativePath));
+    FilePredicates predicates = fileSystem.predicates();
+    return fileSystem.inputFile(predicates.and(predicates.matchesPathPattern("**/" + relativePath), predicates.hasType(Type.MAIN)));
   }
 
 }

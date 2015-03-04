@@ -30,7 +30,6 @@ import org.jacoco.core.data.ExecutionDataStore;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.measures.CoverageMeasuresBuilder;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
@@ -63,13 +62,12 @@ public abstract class AbstractAnalyzer {
 
   @CheckForNull
   private InputFile getInputFile(ISourceFileCoverage coverage) {
-    String path = coverage.getPackageName() + "/" + coverage.getName();
-    InputFile groovyFile = GroovyFileSystem.inputFileFromRelativePath(path, fileSystem);
-    if (groovyFile != null && Type.TEST.equals(groovyFile.type())) {
-      // Ignore unit tests
-      return null;
-    }
-    return groovyFile;
+    String path = getFileRelativePath(coverage);
+    return GroovyFileSystem.inputFileFromRelativePath(path, fileSystem);
+  }
+
+  private String getFileRelativePath(ISourceFileCoverage coverage) {
+    return coverage.getPackageName() + "/" + coverage.getName();
   }
 
   public final void analyse(Project project, SensorContext context) {
@@ -130,7 +128,7 @@ public abstract class AbstractAnalyzer {
     for (ISourceFileCoverage coverage : coverageBuilder.getSourceFiles()) {
       InputFile groovyFile = getInputFile(coverage);
       if (groovyFile != null) {
-        CoverageMeasuresBuilder builder = analyzeFile(groovyFile, coverage);
+        CoverageMeasuresBuilder builder = analyzeFile(coverage);
         saveMeasures(context, groovyFile, builder.createMeasures());
         analyzedResources++;
       }
@@ -168,7 +166,7 @@ public abstract class AbstractAnalyzer {
     }
   }
 
-  private CoverageMeasuresBuilder analyzeFile(InputFile inputFile, ISourceFileCoverage coverage) {
+  private CoverageMeasuresBuilder analyzeFile(ISourceFileCoverage coverage) {
     CoverageMeasuresBuilder builder = CoverageMeasuresBuilder.create();
     for (int lineId = coverage.getFirstLine(); lineId <= coverage.getLastLine(); lineId++) {
       final int hits;
@@ -184,7 +182,7 @@ public abstract class AbstractAnalyzer {
         case ICounter.EMPTY:
           continue;
         default:
-          JaCoCoExtensions.LOG.warn("Unknown status for line {} in {}", lineId, inputFile);
+          JaCoCoExtensions.LOG.warn("Unknown status for line {} in {}", lineId, getFileRelativePath(coverage));
           continue;
       }
       builder.setHits(lineId, hits);
