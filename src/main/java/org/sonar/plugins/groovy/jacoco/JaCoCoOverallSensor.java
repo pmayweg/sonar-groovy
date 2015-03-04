@@ -27,11 +27,10 @@ import org.jacoco.core.data.SessionInfoStore;
 import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.FileSystem;
-import org.sonar.api.component.ResourcePerspectives;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.scan.filesystem.PathResolver;
 import org.sonar.api.utils.SonarException;
@@ -50,19 +49,12 @@ public class JaCoCoOverallSensor implements Sensor {
   public static final String JACOCO_OVERALL = "jacoco-overall.exec";
 
   private final JaCoCoConfiguration configuration;
-  private final ResourcePerspectives perspectives;
   private final ModuleFileSystem moduleFileSystem;
   private final FileSystem fileSystem;
   private final PathResolver pathResolver;
 
-  public JaCoCoOverallSensor(
-    JaCoCoConfiguration configuration,
-    ResourcePerspectives perspectives,
-    ModuleFileSystem moduleFileSystem,
-    FileSystem fileSystem,
-    PathResolver pathResolver) {
+  public JaCoCoOverallSensor(JaCoCoConfiguration configuration, ModuleFileSystem moduleFileSystem, FileSystem fileSystem, PathResolver pathResolver) {
     this.configuration = configuration;
-    this.perspectives = perspectives;
     this.moduleFileSystem = moduleFileSystem;
     this.pathResolver = pathResolver;
     this.fileSystem = fileSystem;
@@ -70,7 +62,7 @@ public class JaCoCoOverallSensor implements Sensor {
 
   @Override
   public boolean shouldExecuteOnProject(Project project) {
-    File baseDir = moduleFileSystem.baseDir();
+    File baseDir = fileSystem.baseDir();
     File reportUTs = pathResolver.relativeFile(baseDir, configuration.getReportPath());
     File reportITs = pathResolver.relativeFile(baseDir, configuration.getItReportPath());
     boolean foundOneReport = reportUTs.exists() || reportITs.exists();
@@ -83,16 +75,16 @@ public class JaCoCoOverallSensor implements Sensor {
 
   @Override
   public void analyse(Project project, SensorContext context) {
-    File baseDir = moduleFileSystem.baseDir();
+    File baseDir = fileSystem.baseDir();
     File reportUTs = pathResolver.relativeFile(baseDir, configuration.getReportPath());
     File reportITs = pathResolver.relativeFile(baseDir, configuration.getItReportPath());
 
-    File reportOverall = new File(moduleFileSystem.workingDir(), JACOCO_OVERALL);
+    File reportOverall = new File(fileSystem.workDir(), JACOCO_OVERALL);
     reportOverall.getParentFile().mkdirs();
 
     mergeReports(reportOverall, reportUTs, reportITs);
 
-    new OverallAnalyzer(reportOverall, perspectives).analyse(project, context);
+    new OverallAnalyzer(reportOverall).analyse(project, context);
   }
 
   private void mergeReports(File reportOverall, File... reports) {
@@ -137,8 +129,8 @@ public class JaCoCoOverallSensor implements Sensor {
   class OverallAnalyzer extends AbstractAnalyzer {
     private final File report;
 
-    OverallAnalyzer(File report, ResourcePerspectives perspectives) {
-      super(perspectives, moduleFileSystem, fileSystem, pathResolver);
+    OverallAnalyzer(File report) {
+      super(moduleFileSystem, fileSystem, pathResolver);
       this.report = report;
     }
 
@@ -148,11 +140,11 @@ public class JaCoCoOverallSensor implements Sensor {
     }
 
     @Override
-    protected void saveMeasures(SensorContext context, Resource resource, Collection<Measure> measures) {
+    protected void saveMeasures(SensorContext context, InputFile inputFile, Collection<Measure> measures) {
       for (Measure measure : measures) {
         Measure mergedMeasure = convertForOverall(measure);
         if (mergedMeasure != null) {
-          context.saveMeasure(resource, mergedMeasure);
+          context.saveMeasure(inputFile, mergedMeasure);
         }
       }
     }

@@ -23,10 +23,9 @@ import org.sonar.api.batch.DependsUpon;
 import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.FileSystem;
-import org.sonar.api.component.ResourcePerspectives;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.scan.filesystem.PathResolver;
 
@@ -35,20 +34,13 @@ import java.util.Collection;
 
 public class JaCoCoSensor implements Sensor {
 
-  private JaCoCoConfiguration configuration;
-  private final ResourcePerspectives perspectives;
+  private final JaCoCoConfiguration configuration;
   private final ModuleFileSystem moduleFileSystem;
   private final FileSystem fileSystem;
   private final PathResolver pathResolver;
 
-  public JaCoCoSensor(
-    JaCoCoConfiguration configuration,
-    ResourcePerspectives perspectives,
-    ModuleFileSystem moduleFileSystem,
-    FileSystem fileSystem,
-    PathResolver pathResolver) {
+  public JaCoCoSensor(JaCoCoConfiguration configuration, ModuleFileSystem moduleFileSystem, FileSystem fileSystem, PathResolver pathResolver) {
     this.configuration = configuration;
-    this.perspectives = perspectives;
     this.moduleFileSystem = moduleFileSystem;
     this.fileSystem = fileSystem;
     this.pathResolver = pathResolver;
@@ -66,7 +58,7 @@ public class JaCoCoSensor implements Sensor {
 
   @Override
   public boolean shouldExecuteOnProject(Project project) {
-    File report = pathResolver.relativeFile(moduleFileSystem.baseDir(), configuration.getReportPath());
+    File report = pathResolver.relativeFile(fileSystem.baseDir(), configuration.getReportPath());
     boolean foundReport = report.exists() && report.isFile();
     boolean shouldExecute = configuration.shouldExecuteOnProject(foundReport);
     if (!foundReport && shouldExecute) {
@@ -77,7 +69,7 @@ public class JaCoCoSensor implements Sensor {
 
   class UnitTestsAnalyzer extends AbstractAnalyzer {
     public UnitTestsAnalyzer() {
-      super(perspectives, moduleFileSystem, fileSystem, pathResolver);
+      super(moduleFileSystem, fileSystem, pathResolver);
     }
 
     @Override
@@ -86,9 +78,9 @@ public class JaCoCoSensor implements Sensor {
     }
 
     @Override
-    protected void saveMeasures(SensorContext context, Resource resource, Collection<Measure> measures) {
+    protected void saveMeasures(SensorContext context, InputFile inputFile, Collection<Measure> measures) {
       for (Measure measure : measures) {
-        context.saveMeasure(resource, measure);
+        context.saveMeasure(inputFile, measure);
       }
     }
   }

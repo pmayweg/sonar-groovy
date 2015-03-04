@@ -22,11 +22,10 @@ package org.sonar.plugins.groovy.jacoco;
 import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.FileSystem;
-import org.sonar.api.component.ResourcePerspectives;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.scan.filesystem.PathResolver;
 
@@ -35,14 +34,12 @@ import java.util.Collection;
 
 public class JaCoCoItSensor implements Sensor {
   private final JaCoCoConfiguration configuration;
-  private final ResourcePerspectives perspectives;
   private final ModuleFileSystem moduleFileSystem;
   private final FileSystem fileSystem;
   private final PathResolver pathResolver;
 
-  public JaCoCoItSensor(JaCoCoConfiguration configuration, ResourcePerspectives perspectives, ModuleFileSystem moduleFileSystem, FileSystem fileSystem, PathResolver pathResolver) {
+  public JaCoCoItSensor(JaCoCoConfiguration configuration, ModuleFileSystem moduleFileSystem, FileSystem fileSystem, PathResolver pathResolver) {
     this.configuration = configuration;
-    this.perspectives = perspectives;
     this.moduleFileSystem = moduleFileSystem;
     this.fileSystem = fileSystem;
     this.pathResolver = pathResolver;
@@ -50,7 +47,7 @@ public class JaCoCoItSensor implements Sensor {
 
   @Override
   public boolean shouldExecuteOnProject(Project project) {
-    File report = pathResolver.relativeFile(moduleFileSystem.baseDir(), configuration.getItReportPath());
+    File report = pathResolver.relativeFile(fileSystem.baseDir(), configuration.getItReportPath());
     boolean foundReport = report.exists() && report.isFile();
     boolean shouldExecute = configuration.shouldExecuteOnProject(foundReport);
     if (!foundReport && shouldExecute) {
@@ -61,12 +58,12 @@ public class JaCoCoItSensor implements Sensor {
 
   @Override
   public void analyse(Project project, SensorContext context) {
-    new ITAnalyzer(perspectives).analyse(project, context);
+    new ITAnalyzer().analyse(project, context);
   }
 
   class ITAnalyzer extends AbstractAnalyzer {
-    public ITAnalyzer(ResourcePerspectives perspectives) {
-      super(perspectives, moduleFileSystem, fileSystem, pathResolver);
+    public ITAnalyzer() {
+      super(moduleFileSystem, fileSystem, pathResolver);
     }
 
     @Override
@@ -75,11 +72,11 @@ public class JaCoCoItSensor implements Sensor {
     }
 
     @Override
-    protected void saveMeasures(SensorContext context, Resource resource, Collection<Measure> measures) {
+    protected void saveMeasures(SensorContext context, InputFile inputFile, Collection<Measure> measures) {
       for (Measure measure : measures) {
         Measure itMeasure = convertForIT(measure);
         if (itMeasure != null) {
-          context.saveMeasure(resource, itMeasure);
+          context.saveMeasure(inputFile, itMeasure);
         }
       }
     }

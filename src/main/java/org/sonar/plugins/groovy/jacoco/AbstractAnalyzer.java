@@ -30,15 +30,14 @@ import org.jacoco.core.data.ExecutionDataStore;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.component.ResourcePerspectives;
+import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.measures.CoverageMeasuresBuilder;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
-import org.sonar.api.resources.ResourceUtils;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.scan.filesystem.PathResolver;
 import org.sonar.api.utils.SonarException;
+import org.sonar.plugins.groovy.foundation.GroovyFileSystem;
 
 import javax.annotation.CheckForNull;
 
@@ -52,38 +51,25 @@ import java.util.List;
 
 public abstract class AbstractAnalyzer {
 
-  private final ResourcePerspectives perspectives;
   private final ModuleFileSystem moduleFileSystem;
   private final FileSystem fileSystem;
   private final PathResolver pathResolver;
 
-  public AbstractAnalyzer(ResourcePerspectives perspectives, ModuleFileSystem moduleFileSystem, FileSystem fileSystem, PathResolver pathResolver) {
-    this.perspectives = perspectives;
+  public AbstractAnalyzer(ModuleFileSystem moduleFileSystem, FileSystem fileSystem, PathResolver pathResolver) {
     this.moduleFileSystem = moduleFileSystem;
     this.fileSystem = fileSystem;
     this.pathResolver = pathResolver;
   }
 
-  private Resource getResource(ISourceFileCoverage coverage, SensorContext context) {
-    String fileRelativePath = coverage.getPackageName() + "/" + coverage.getName();
-    Resource resourceInContext = getResource(fileRelativePath, context);
-    if (resourceInContext != null && ResourceUtils.isUnitTestClass(resourceInContext)) {
+  @CheckForNull
+  private InputFile getInputFile(ISourceFileCoverage coverage) {
+    String path = coverage.getPackageName() + "/" + coverage.getName();
+    InputFile groovyFile = GroovyFileSystem.inputFileFromRelativePath(path, fileSystem);
+    if (groovyFile != null && Type.TEST.equals(groovyFile.type())) {
       // Ignore unit tests
       return null;
     }
-    return resourceInContext;
-  }
-
-  @CheckForNull
-  private Resource getResource(String fileRelativePath, SensorContext context) {
-    for (File sourceDir : moduleFileSystem.sourceDirs()) {
-      String absolutePath = sourceDir.getAbsolutePath() + "/" + fileRelativePath;
-      InputFile groovyFile = fileSystem.inputFile(fileSystem.predicates().hasAbsolutePath(absolutePath));
-      if (groovyFile != null) {
-        return context.getResource(groovyFile);
-      }
-    }
-    return null;
+    return groovyFile;
   }
 
   public final void analyse(Project project, SensorContext context) {
@@ -96,7 +82,7 @@ public abstract class AbstractAnalyzer {
       JaCoCoExtensions.LOG.warn("No jacoco coverage execution file found for project " + project.getName() + ".");
       return;
     }
-    File jacocoExecutionData = pathResolver.relativeFile(moduleFileSystem.baseDir(), path);
+    File jacocoExecutionData = pathResolver.relativeFile(fileSystem.baseDir(), path);
 
     try {
       readExecutionData(jacocoExecutionData, context);
@@ -122,7 +108,7 @@ public abstract class AbstractAnalyzer {
   public final void readExecutionData(File jacocoExecutionData, SensorContext context) throws IOException {
     ExecutionDataVisitor executionDataVisitor = new ExecutionDataVisitor();
 
-    if (jacocoExecutionData == null || !jacocoExecutionData.exists() || !jacocoExecutionData.isFile()) {
+    if (jacocoExecutionData == null || !jacocoExecutionData.isFile()) {
       JaCoCoExtensions.LOG.warn("Project coverage is set to 0% as no JaCoCo execution data has been dumped: {}", jacocoExecutionData);
     } else {
       JaCoCoExtensions.LOG.info("Analysing {}", jacocoExecutionData);
@@ -142,10 +128,10 @@ public abstract class AbstractAnalyzer {
     CoverageBuilder coverageBuilder = analyze(executionDataVisitor.getMerged());
     int analyzedResources = 0;
     for (ISourceFileCoverage coverage : coverageBuilder.getSourceFiles()) {
-      Resource resource = getResource(coverage, context);
-      if (resource != null) {
-        CoverageMeasuresBuilder builder = analyzeFile(resource, coverage);
-        saveMeasures(context, resource, builder.createMeasures());
+      InputFile groovyFile = getInputFile(coverage);
+      if (groovyFile != null) {
+        CoverageMeasuresBuilder builder = analyzeFile(groovyFile, coverage);
+        saveMeasures(context, groovyFile, builder.createMeasures());
         analyzedResources++;
       }
     }
@@ -182,7 +168,7 @@ public abstract class AbstractAnalyzer {
     }
   }
 
-  private CoverageMeasuresBuilder analyzeFile(Resource resource, ISourceFileCoverage coverage) {
+  private CoverageMeasuresBuilder analyzeFile(InputFile inputFile, ISourceFileCoverage coverage) {
     CoverageMeasuresBuilder builder = CoverageMeasuresBuilder.create();
     for (int lineId = coverage.getFirstLine(); lineId <= coverage.getLastLine(); lineId++) {
       final int hits;
@@ -198,7 +184,7 @@ public abstract class AbstractAnalyzer {
         case ICounter.EMPTY:
           continue;
         default:
-          JaCoCoExtensions.LOG.warn("Unknown status for line {} in {}", lineId, resource);
+          JaCoCoExtensions.LOG.warn("Unknown status for line {} in {}", lineId, inputFile);
           continue;
       }
       builder.setHits(lineId, hits);
@@ -213,7 +199,7 @@ public abstract class AbstractAnalyzer {
     return builder;
   }
 
-  protected abstract void saveMeasures(SensorContext context, Resource resource, Collection<Measure> measures);
+  protected abstract void saveMeasures(SensorContext context, InputFile inputFile, Collection<Measure> measures);
 
   protected abstract String getReportPath(Project project);
 }

@@ -21,6 +21,7 @@ package org.sonar.plugins.groovy.jacoco;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.SensorContext;
@@ -28,10 +29,8 @@ import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
-import org.sonar.api.component.ResourcePerspectives;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.scan.filesystem.PathResolver;
 import org.sonar.api.test.IsMeasure;
@@ -43,7 +42,6 @@ import java.util.List;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -53,6 +51,7 @@ import static org.mockito.Mockito.when;
 public class JaCoCoItSensorTest {
 
   private File jacocoExecutionData;
+  private InputFile inputFile;
   private JaCoCoConfiguration configuration;
   private SensorContext context;
   private PathResolver pathResolver;
@@ -72,8 +71,6 @@ public class JaCoCoItSensorTest {
 
     ModuleFileSystem moduleFileSystem = mock(ModuleFileSystem.class);
     when(moduleFileSystem.binaryDirs()).thenReturn(binaryDirs);
-    when(moduleFileSystem.baseDir()).thenReturn(jacocoExecutionData.getParentFile());
-    when(moduleFileSystem.sourceDirs()).thenReturn(Lists.newArrayList(jacocoExecutionData.getParentFile()));
 
     configuration = mock(JaCoCoConfiguration.class);
     when(configuration.shouldExecuteOnProject(true)).thenReturn(true);
@@ -81,16 +78,17 @@ public class JaCoCoItSensorTest {
     when(configuration.getItReportPath()).thenReturn(jacocoExecutionData.getPath());
 
     DefaultFileSystem fileSystem = new DefaultFileSystem();
-    fileSystem.add(new DefaultInputFile("org/sonar/plugins/groovy/jacoco/tests/Hello.groovy")
+    fileSystem.setBaseDir(jacocoExecutionData.getParentFile());
+    inputFile = new DefaultInputFile("org/sonar/plugins/groovy/jacoco/tests/Hello.groovy")
       .setLanguage(Groovy.KEY)
       .setType(Type.MAIN)
-      .setAbsolutePath(moduleFileSystem.baseDir() + "/org/sonar/plugins/groovy/jacoco/tests/Hello.groovy"));
+      .setAbsolutePath(fileSystem.baseDir() + "/org/sonar/plugins/groovy/jacoco/tests/Hello.groovy");
+    fileSystem.add(inputFile);
 
     context = mock(SensorContext.class);
     pathResolver = mock(PathResolver.class);
     project = mock(Project.class);
-    ResourcePerspectives perspectives = mock(ResourcePerspectives.class);
-    sensor = new JaCoCoItSensor(configuration, perspectives, moduleFileSystem, fileSystem, pathResolver);
+    sensor = new JaCoCoItSensor(configuration, moduleFileSystem, fileSystem, pathResolver);
   }
 
   @Test
@@ -119,20 +117,18 @@ public class JaCoCoItSensorTest {
 
   @Test
   public void test_read_execution_data() {
-    Resource resource = mock(Resource.class);
-    when(pathResolver.relativeFile(any(File.class), anyString())).thenReturn(jacocoExecutionData);
-    when(context.getResource(any(InputFile.class))).thenReturn(resource);
+    when(pathResolver.relativeFile(any(File.class), argThat(Matchers.endsWith(".exec")))).thenReturn(jacocoExecutionData);
 
     sensor.analyse(project, context);
 
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.IT_LINES_TO_COVER, 14.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.IT_UNCOVERED_LINES, 11.0)));
-    verify(context).saveMeasure(eq(resource),
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.IT_LINES_TO_COVER, 14.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.IT_UNCOVERED_LINES, 11.0)));
+    verify(context).saveMeasure(eq(inputFile),
       argThat(new IsMeasure(CoreMetrics.IT_COVERAGE_LINE_HITS_DATA, "9=1;10=1;14=0;15=0;17=0;21=0;25=1;29=0;30=0;32=0;33=0;38=0;42=0;47=0")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.IT_CONDITIONS_TO_COVER, 6.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.IT_UNCOVERED_CONDITIONS, 6.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.IT_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.IT_COVERED_CONDITIONS_BY_LINE, "14=0;29=0;30=0")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.IT_CONDITIONS_TO_COVER, 6.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.IT_UNCOVERED_CONDITIONS, 6.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.IT_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.IT_COVERED_CONDITIONS_BY_LINE, "14=0;29=0;30=0")));
   }
 
 }

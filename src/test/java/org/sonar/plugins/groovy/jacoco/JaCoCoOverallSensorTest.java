@@ -28,10 +28,8 @@ import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
-import org.sonar.api.component.ResourcePerspectives;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.resources.Project;
-import org.sonar.api.resources.Resource;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.scan.filesystem.PathResolver;
 import org.sonar.api.test.IsMeasure;
@@ -60,6 +58,7 @@ public class JaCoCoOverallSensorTest {
   private File jacocoUTData;
   private File jacocoITData;
   private File outputDir;
+  private InputFile inputFile;
 
   @Before
   public void before() throws Exception {
@@ -75,15 +74,15 @@ public class JaCoCoOverallSensorTest {
 
     ModuleFileSystem moduleFileSystem = mock(ModuleFileSystem.class);
     when(moduleFileSystem.binaryDirs()).thenReturn(binaryDirs);
-    when(moduleFileSystem.baseDir()).thenReturn(jacocoUTData.getParentFile());
-    when(moduleFileSystem.sourceDirs()).thenReturn(Lists.newArrayList(jacocoUTData.getParentFile()));
-    when(moduleFileSystem.workingDir()).thenReturn(jacocoUTData.getParentFile());
 
     DefaultFileSystem fileSystem = new DefaultFileSystem();
-    fileSystem.add(new DefaultInputFile("org/sonar/plugins/groovy/jacoco/tests/Hello.groovy")
+    fileSystem.setWorkDir(jacocoUTData.getParentFile());
+    fileSystem.setBaseDir(jacocoUTData.getParentFile());
+    inputFile = new DefaultInputFile("org/sonar/plugins/groovy/jacoco/tests/Hello.groovy")
       .setLanguage(Groovy.KEY)
       .setType(Type.MAIN)
-      .setAbsolutePath(moduleFileSystem.baseDir() + "/org/sonar/plugins/groovy/jacoco/tests/Hello.groovy"));
+      .setAbsolutePath(fileSystem.baseDir() + "/org/sonar/plugins/groovy/jacoco/tests/Hello.groovy");
+    fileSystem.add(inputFile);
 
     configuration = mock(JaCoCoConfiguration.class);
     when(configuration.shouldExecuteOnProject(true)).thenReturn(true);
@@ -91,8 +90,7 @@ public class JaCoCoOverallSensorTest {
     context = mock(SensorContext.class);
     pathResolver = mock(PathResolver.class);
     project = mock(Project.class);
-    ResourcePerspectives perspectives = mock(ResourcePerspectives.class);
-    sensor = new JaCoCoOverallSensor(configuration, perspectives, moduleFileSystem, fileSystem, pathResolver);
+    sensor = new JaCoCoOverallSensor(configuration, moduleFileSystem, fileSystem, pathResolver);
   }
 
   @Test
@@ -124,55 +122,49 @@ public class JaCoCoOverallSensorTest {
   @Test
   public void test_read_execution_data_with_IT_and_UT() {
     setMocks(true, true);
-    Resource resource = mock(Resource.class);
-    when(context.getResource(any(InputFile.class))).thenReturn(resource);
 
     sensor.analyse(project, context);
 
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_LINES_TO_COVER, 14.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_LINES, 2.0)));
-    verify(context).saveMeasure(eq(resource),
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_LINES_TO_COVER, 14.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_LINES, 2.0)));
+    verify(context).saveMeasure(eq(inputFile),
       argThat(new IsMeasure(CoreMetrics.OVERALL_COVERAGE_LINE_HITS_DATA, "9=1;10=1;14=1;15=1;17=1;21=1;25=1;29=1;30=0;32=1;33=1;38=0;42=1;47=1")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_TO_COVER, 6.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_CONDITIONS, 3.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_COVERED_CONDITIONS_BY_LINE, "14=2;29=1;30=0")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_TO_COVER, 6.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_CONDITIONS, 3.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_COVERED_CONDITIONS_BY_LINE, "14=2;29=1;30=0")));
   }
 
   @Test
   public void test_read_execution_data_with_only_UT() {
     setMocks(true, false);
-    Resource resource = mock(Resource.class);
-    when(context.getResource(any(InputFile.class))).thenReturn(resource);
 
     sensor.analyse(project, context);
 
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_LINES_TO_COVER, 14.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_LINES, 3.0)));
-    verify(context).saveMeasure(eq(resource),
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_LINES_TO_COVER, 14.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_LINES, 3.0)));
+    verify(context).saveMeasure(eq(inputFile),
       argThat(new IsMeasure(CoreMetrics.OVERALL_COVERAGE_LINE_HITS_DATA, "9=1;10=1;14=1;15=1;17=1;21=1;25=0;29=1;30=0;32=1;33=1;38=0;42=1;47=1")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_TO_COVER, 6.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_CONDITIONS, 3.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_COVERED_CONDITIONS_BY_LINE, "14=2;29=1;30=0")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_TO_COVER, 6.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_CONDITIONS, 3.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_COVERED_CONDITIONS_BY_LINE, "14=2;29=1;30=0")));
   }
 
   @Test
   public void test_read_execution_data_with_only_IT() {
     setMocks(false, true);
-    Resource resource = mock(Resource.class);
-    when(context.getResource(any(InputFile.class))).thenReturn(resource);
 
     sensor.analyse(project, context);
 
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_LINES_TO_COVER, 14.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_LINES, 11.0)));
-    verify(context).saveMeasure(eq(resource),
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_LINES_TO_COVER, 14.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_LINES, 11.0)));
+    verify(context).saveMeasure(eq(inputFile),
       argThat(new IsMeasure(CoreMetrics.OVERALL_COVERAGE_LINE_HITS_DATA, "9=1;10=1;14=0;15=0;17=0;21=0;25=1;29=0;30=0;32=0;33=0;38=0;42=0;47=0")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_TO_COVER, 6.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_CONDITIONS, 6.0)));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
-    verify(context).saveMeasure(eq(resource), argThat(new IsMeasure(CoreMetrics.OVERALL_COVERED_CONDITIONS_BY_LINE, "14=0;29=0;30=0")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_TO_COVER, 6.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_UNCOVERED_CONDITIONS, 6.0)));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_CONDITIONS_BY_LINE, "14=2;29=2;30=2")));
+    verify(context).saveMeasure(eq(inputFile), argThat(new IsMeasure(CoreMetrics.OVERALL_COVERED_CONDITIONS_BY_LINE, "14=0;29=0;30=0")));
   }
 
   private void setMocks(boolean utReport, boolean itReport) {

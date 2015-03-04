@@ -49,4 +49,16 @@ public class GroovyFileSystemTest {
     fileSystem.add(new DefaultInputFile("fake.groovy").setLanguage(Groovy.KEY).setAbsolutePath("fake.groovy"));
     assertThat(GroovyFileSystem.sourceFiles(fileSystem)).hasSize(1);
   }
+
+  @Test
+  public void inputFileFromRelativePath() {
+    DefaultFileSystem fileSystem = new DefaultFileSystem();
+    assertThat(GroovyFileSystem.inputFileFromRelativePath(null, fileSystem)).isNull();
+
+    fileSystem.add(new DefaultInputFile("fake1.file"));
+    assertThat(GroovyFileSystem.inputFileFromRelativePath("fake1.file", fileSystem)).isNotNull();
+
+    fileSystem.add(new DefaultInputFile("org/sample/foo/fake2.file"));
+    assertThat(GroovyFileSystem.inputFileFromRelativePath("foo/fake2.file", fileSystem)).isNotNull();
+  }
 }
