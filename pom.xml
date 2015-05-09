@@ -90,7 +90,6 @@
       <artifactId>sonar-deprecated</artifactId>
       <version>${sonar.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.codenarc</groupId>
       <artifactId>CodeNarc</artifactId>
@@ -119,6 +118,12 @@
       <groupId>org.jacoco</groupId>
       <artifactId>org.jacoco.core</artifactId>
       <version>0.7.4.201502262128</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.sonar-plugins.java</groupId>
+      <artifactId>java-surefire</artifactId>
+      <version>3.2</version>
     </dependency>
 
     <dependency>
@@ -179,7 +184,7 @@
             <configuration>
               <rules>
                 <requireFilesSize>
-                  <maxsize>16000000</maxsize>
+                  <maxsize>17000000</maxsize>
                   <minsize>8500000</minsize>
                   <files>
                     <file>${project.build.directory}/${project.build.finalName}.jar</file>
