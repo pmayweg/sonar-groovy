@@ -3995,7 +3995,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the regular expression used to validate the class name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/([A-Z]\w*\$?)*/</defaultValue>
+      <defaultValue>([A-Z]\w*\$?)*</defaultValue>
     </param>
   </rule>
 
@@ -4042,12 +4042,12 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the default regular expression used to validate the field name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/[a-z][a-zA-Z0-9]*/</defaultValue>
+      <defaultValue>[a-z][a-zA-Z0-9]*</defaultValue>
     </param>
     <param>
       <key>staticFinalRegex</key>
       <description><![CDATA[Specifies the regular expression used to validate static final field names. It is optional. If not set, then static final fields are validated using finalRegex, staticRegex or regex. ]]></description>
-      <defaultValue>/[A-Z][A-Z0-9_]*/</defaultValue>
+      <defaultValue>[A-Z][A-Z0-9_]*</defaultValue>
     </param>
     <param>
       <key>staticRegex</key>
@@ -4087,7 +4087,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the regular expression used to validate the method name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/[a-z]\w*/</defaultValue>
+      <defaultValue>[a-z]\w*</defaultValue>
     </param>
   </rule>
 
@@ -4134,7 +4134,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the regular expression used to validate the package name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/[a-z]+[a-z0-9]*(\.[a-z0-9]+)*/</defaultValue>
+      <defaultValue>[a-z]+[a-z0-9]*(\.[a-z0-9]+)*</defaultValue>
     </param>
   </rule>
 
@@ -4154,7 +4154,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the regular expression used to validate the parameter name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/[a-z][a-zA-Z0-9]*/</defaultValue>
+      <defaultValue>[a-z][a-zA-Z0-9]*</defaultValue>
     </param>
   </rule>
 
@@ -4181,12 +4181,12 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the default regular expression used to validate the property name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/[a-z][a-zA-Z0-9]*/</defaultValue>
+      <defaultValue>[a-z][a-zA-Z0-9]*</defaultValue>
     </param>
     <param>
       <key>staticFinalRegex</key>
       <description><![CDATA[Specifies the regular expression used to validate static final property names. It is optional. If not set, then static final property are validated using finalRegex, staticRegex or regex. ]]></description>
-      <defaultValue>/[A-Z][A-Z0-9_]*/</defaultValue>
+      <defaultValue>[A-Z][A-Z0-9_]*</defaultValue>
     </param>
     <param>
       <key>staticRegex</key>
@@ -4206,7 +4206,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>finalRegex</key>
       <description><![CDATA[Specifies the regular expression used to validate final variable names. It is optional. If not set, then regex is used to validate final variable names. ]]></description>
-      <defaultValue>/[A-Z][A-Z0-9_]*/</defaultValue>
+      <defaultValue>[A-Z][A-Z0-9_]*</defaultValue>
     </param>
     <param>
       <key>ignoreVariableNames</key>
@@ -4216,7 +4216,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the default regular expression used to validate the variable name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/[a-z][a-zA-Z0-9]*/</defaultValue>
+      <defaultValue>[a-z][a-zA-Z0-9]*</defaultValue>
     </param>
   </rule>
 
@@ -4274,7 +4274,7 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>regex</key>
       <description><![CDATA[Specifies the default regular expression used to validate the method name. It is required and cannot be null or empty. ]]></description>
-      <defaultValue>/(build.*\|create.*)/</defaultValue>
+      <defaultValue>(build.*\|create.*)</defaultValue>
     </param>
   </rule>
 
@@ -6431,12 +6431,12 @@ for (int i = 0; i < 100; ++i) {
     <param>
       <key>characterAfterColonRegex</key>
       <description><![CDATA[The regular expression that must match the character after the colon (:) for a literal <Map> entry. For example, /\\S/ matches any non-whitespace character and /\\s/ matches any whitespace character (thus requiring a space or whitespace). ]]></description>
-      <defaultValue>/\\S/</defaultValue>
+      <defaultValue>\\S</defaultValue>
     </param>
     <param>
       <key>characterBeforeColonRegex</key>
       <description><![CDATA[The regular expression that must match the character before the colon (:) for a literal <Map> entry. For example, /\\S/ matches any non-whitespace character and /\\s/ matches any whitespace character (thus requiring a space or whitespace). ]]></description>
-      <defaultValue>/\\S/</defaultValue>
+      <defaultValue>\\S</defaultValue>
     </param>
   </rule>
 
