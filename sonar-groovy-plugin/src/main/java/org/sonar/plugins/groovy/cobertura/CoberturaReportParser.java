@@ -123,7 +123,9 @@ public class CoberturaReportParser {
       String fileKey = entry.getKey();
       InputFile file = getInputFile(fileKey, sourceDirs);
       if (file != null) {
+        LOG.info("saving measure for file: " + (file.file() != null ? file.file().getName() : "unknown"));
         for (Measure measure : entry.getValue().createMeasures()) {
+          LOG.info("-- measure: " + measure.getMetricKey() + " = " + (measure.hasData() ? measure.getData() : measure.getValue()));
           context.saveMeasure(file, measure);
         }
       } else {
