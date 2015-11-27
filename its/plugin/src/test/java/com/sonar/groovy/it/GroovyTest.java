@@ -52,6 +52,12 @@ public class GroovyTest {
 
     orchestrator.executeBuild(MavenBuild.create().setPom(FileLocation.of("dummy-pom.xml"))
       .setProperty("skipTests", "true")
+      .setProperty("javapArg", "projects/codenarc-0.9-r1/target/classes/org/codenarc/util/PathUtil.class")
+      .setGoals("install"));
+
+    orchestrator.executeBuild(MavenBuild.create().setPom(FileLocation.of("dummy-pom.xml"))
+      .setProperty("skipTests", "true")
+      .setProperty("javapArg", "projects/codenarc-0.9-r1/target/generated-classes/cobertura/org/codenarc/util/PathUtil.class")
       .setGoals("install"));
 
     // Sonar analysis:
@@ -63,7 +69,7 @@ public class GroovyTest {
       .setGoals("sonar:sonar");
 
     build.setProperty("sonar.dynamicAnalysis", "reuseReports")
-      .setProperty("sonar.groovy.cobertura.reportPath", "target/site/cobertura/coverage.xml");
+    .setProperty("sonar.groovy.cobertura.reportPath", "target/site/cobertura/coverage.xml");
 
     orchestrator.executeBuild(build);
   }
