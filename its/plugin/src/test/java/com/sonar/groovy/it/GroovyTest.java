@@ -50,6 +50,10 @@ public class GroovyTest {
       .setProperty("cobertura.report.format", "xml")
       .setGoals("clean", "org.codehaus.mojo:cobertura-maven-plugin:2.5:cobertura"));
 
+    orchestrator.executeBuild(MavenBuild.create().setPom(FileLocation.of("dummy-pom.xml"))
+      .setProperty("skipTests", "true")
+      .setGoals("install"));
+
     // Sonar analysis:
     MavenBuild build = Tests.createMavenBuild()
       .setPom(FileLocation.of("projects/codenarc-0.9-r1/pom.xml"))

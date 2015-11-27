@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.codenarc</groupId>
+	<artifactId>CodeNarc22</artifactId>
+	<version>1</version>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>exec-maven-plugin</artifactId>
+				<groupId>org.codehaus.mojo</groupId>
+				<executions>
+					<execution>
+						<id>javap</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+						    <executable>javap</executable>
+						    <arguments> 
+ 							    <argument>-c</argument>
+ 							    <argument>-p</argument>
+ 							    <argument>-l</argument>
+ 							    <argument>projects/codenarc-0.9-r1/target/generated-classes/cobertura/org/codenarc/util/PathUtil.class</argument>
+ 							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
