@@ -21,13 +21,6 @@ package org.sonar.plugins.groovy.cobertura;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.io.File;
-import java.text.ParseException;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
-import javax.xml.stream.XMLStreamException;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.staxmate.in.SMHierarchicCursor;
 import org.codehaus.staxmate.in.SMInputCursor;
@@ -40,6 +33,15 @@ import org.sonar.api.measures.CoverageMeasuresBuilder;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.utils.StaxParser;
 import org.sonar.api.utils.XmlParserException;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
+import javax.xml.stream.XMLStreamException;
+
+import java.io.File;
+import java.text.ParseException;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Locale.ENGLISH;
 import static org.sonar.api.utils.ParsingUtils.parseNumber;
@@ -55,50 +57,6 @@ public class CoberturaReportParser {
   public CoberturaReportParser(final SensorContext context, final FileSystem fileSystem) {
     this.context = context;
     this.fileSystem = fileSystem;
-  }
-
-  private static List<String> collectSourceDirs(SMInputCursor source) throws XMLStreamException {
-    List<String> directories = Lists.newLinkedList();
-    while (source.getNext() != null) {
-      String sourceDir = cleanSourceDir(source.getElemStringValue());
-      if (StringUtils.isNotBlank(sourceDir)) {
-        directories.add(sourceDir);
-      }
-    }
-    return directories;
-  }
-
-  private static String cleanSourceDir(String sourceDir) {
-    if (StringUtils.isNotBlank(sourceDir)) {
-      return sourceDir.trim();
-    }
-    return sourceDir;
-  }
-
-  private static void collectFileData(SMInputCursor clazz, ParsingResult parsingResult) throws XMLStreamException {
-    SMInputCursor line = clazz.childElementCursor("lines").advance().childElementCursor("line");
-    while (line.getNext() != null) {
-      int lineId = Integer.parseInt(line.getAttrValue("number"));
-      boolean validLine = parsingResult.isValidLine(lineId);
-      if (!validLine && parsingResult.fileExists()) {
-        LOG.info("Hit on invalid line for file " + parsingResult.filename + " (line: " + lineId + "/" + parsingResult.inputFile.lines() + ")");
-      }
-      try {
-        int hits = (int) parseNumber(line.getAttrValue("hits"), ENGLISH);
-        if (validLine) {
-          parsingResult.builder.setHits(lineId, hits);
-        }
-      } catch (ParseException e) {
-        throw new XmlParserException(e);
-      }
-
-      String isBranch = line.getAttrValue("branch");
-      String text = line.getAttrValue("condition-coverage");
-      if (validLine && StringUtils.equals(isBranch, "true") && StringUtils.isNotBlank(text)) {
-        String[] conditions = StringUtils.split(StringUtils.substringBetween(text, "(", ")"), "/");
-        parsingResult.builder.setConditions(lineId, Integer.parseInt(conditions[1]), Integer.parseInt(conditions[0]));
-      }
-    }
   }
 
   /**
@@ -122,6 +80,24 @@ public class CoberturaReportParser {
       }
     });
     sourceParser.parse(xmlFile);
+  }
+
+  private static List<String> collectSourceDirs(SMInputCursor source) throws XMLStreamException {
+    List<String> directories = Lists.newLinkedList();
+    while (source.getNext() != null) {
+      String sourceDir = cleanSourceDir(source.getElemStringValue());
+      if (StringUtils.isNotBlank(sourceDir)) {
+        directories.add(sourceDir);
+      }
+    }
+    return directories;
+  }
+
+  private static String cleanSourceDir(String sourceDir) {
+    if (StringUtils.isNotBlank(sourceDir)) {
+      return sourceDir.trim();
+    }
+    return sourceDir;
   }
 
   private void parsePackages(File xmlFile) throws XMLStreamException {
@@ -168,7 +144,7 @@ public class CoberturaReportParser {
   }
 
   private void collectFileMeasures(SMInputCursor clazz, Map<String, ParsingResult> resultByFilename)
-    throws XMLStreamException {
+          throws XMLStreamException {
     while (clazz.getNext() != null) {
       String fileName = clazz.getAttrValue("filename");
       ParsingResult parsingResult = resultByFilename.get(fileName);
@@ -177,6 +153,32 @@ public class CoberturaReportParser {
         resultByFilename.put(fileName, parsingResult);
       }
       collectFileData(clazz, parsingResult);
+    }
+  }
+
+  private static void collectFileData(SMInputCursor clazz, ParsingResult parsingResult) throws XMLStreamException {
+    SMInputCursor line = clazz.childElementCursor("lines").advance().childElementCursor("line");
+    while (line.getNext() != null) {
+      int lineId = Integer.parseInt(line.getAttrValue("number"));
+      boolean validLine = parsingResult.isValidLine(lineId);
+      if (!validLine && parsingResult.fileExists()) {
+        LOG.info("Hit on invalid line for file " + parsingResult.filename + " (line: " + lineId + "/" + parsingResult.inputFile.lines() + ")");
+      }
+      try {
+        int hits = (int) parseNumber(line.getAttrValue("hits"), ENGLISH);
+        if (validLine) {
+          parsingResult.builder.setHits(lineId, hits);
+        }
+      } catch (ParseException e) {
+        throw new XmlParserException(e);
+      }
+
+      String isBranch = line.getAttrValue("branch");
+      String text = line.getAttrValue("condition-coverage");
+      if (validLine && StringUtils.equals(isBranch, "true") && StringUtils.isNotBlank(text)) {
+        String[] conditions = StringUtils.split(StringUtils.substringBetween(text, "(", ")"), "/");
+        parsingResult.builder.setConditions(lineId, Integer.parseInt(conditions[1]), Integer.parseInt(conditions[0]));
+      }
     }
   }
 
@@ -193,7 +195,7 @@ public class CoberturaReportParser {
     }
 
     public boolean isValidLine(int lineId) {
-      return fileExists() && lineId > 0 && lineId <= inputFile.lines();
+      return fileExists() && lineId> 0 && lineId <= inputFile.lines();
     }
 
     public boolean fileExists() {
