@@ -19,18 +19,15 @@
  */
 package org.sonar.plugins.groovy.cobertura;
 
-import static java.util.Locale.ENGLISH;
-import static org.sonar.api.utils.ParsingUtils.parseNumber;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.io.File;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
-
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.staxmate.in.SMHierarchicCursor;
 import org.codehaus.staxmate.in.SMInputCursor;
@@ -44,8 +41,8 @@ import org.sonar.api.measures.Measure;
 import org.sonar.api.utils.StaxParser;
 import org.sonar.api.utils.XmlParserException;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import static java.util.Locale.ENGLISH;
+import static org.sonar.api.utils.ParsingUtils.parseNumber;
 
 public class CoberturaReportParser {
 
