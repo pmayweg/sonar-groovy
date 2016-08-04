@@ -73,7 +73,7 @@ public class Converter {
     System.out.println();
     System.out.println(count + " rules processed");
   }
-  
+
   private static File setUpRulesFile() throws IOException {
     File resultDir = new File(RESULTS_FOLDER);
     resultDir.mkdirs();
