@@ -9,7 +9,7 @@ addons:
       - oracle-java8-installer
 
 install: true
-script: ./travis.sh
+script: mvn verify -B -e -V
 env:
   - TEST=ci
 
@@ -22,5 +22,3 @@ cache:
 
 notifications:
   email: false
-  webhooks:
-    - secure: "eB4XQvyEmKH20QdVSSd2eV7o4zu2cJOekqlmCn572QfY+TwWx9xGWCuOFRSuDTJhl8WB/qSzqFSjAWCqQgRMaODWjAR3yzvJ4v3TRBEZnw8IhLVO33O5sZevCFMVl8kdsuaeUmM2d+A6/rjpWfixc0NnZRify0ZfK+1dkHoR1K0="
