@@ -10,8 +10,6 @@ addons:
 
 install: true
 script: mvn verify -B -e -V
-env:
-  - TEST=ci
 
 matrix:
   fast_finish: true
