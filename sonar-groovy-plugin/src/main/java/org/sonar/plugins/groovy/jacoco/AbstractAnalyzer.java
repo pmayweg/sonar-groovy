@@ -75,7 +75,7 @@ public abstract class AbstractAnalyzer {
   }
 
   @CheckForNull
-  private InputFile getInputFile(ISourceFileCoverage coverage) {
+  protected InputFile getInputFile(ISourceFileCoverage coverage) {
     String path = getFileRelativePath(coverage);
     InputFile sourceInputFileFromRelativePath = groovyFileSystem.sourceInputFileFromRelativePath(path);
     if (sourceInputFileFromRelativePath == null) {
@@ -85,7 +85,12 @@ public abstract class AbstractAnalyzer {
   }
 
   private static String getFileRelativePath(ISourceFileCoverage coverage) {
-    return coverage.getPackageName() + "/" + coverage.getName();
+    String path = coverage.getName();
+    String packageName = coverage.getPackageName();
+    if (packageName != null && !packageName.equals("")) {
+      path = packageName + "/" + path;
+    }
+    return path;
   }
 
   public final void analyse(SensorContext context) {
