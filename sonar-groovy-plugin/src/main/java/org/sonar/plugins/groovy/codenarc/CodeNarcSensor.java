@@ -74,12 +74,17 @@ public class CodeNarcSensor implements Sensor {
     if (context.settings().hasKey(GroovyPlugin.CODENARC_REPORT_PATH)) {
       // Yes
       String codeNarcReportPath = context.settings().getString(GroovyPlugin.CODENARC_REPORT_PATH);
-      File report = context.fileSystem().resolvePath(codeNarcReportPath);
-      if (!report.isFile()) {
-        LOG.warn("Groovy report " + GroovyPlugin.CODENARC_REPORT_PATH + " not found at {}", report);
-        return;
+      List<File> reports = new ArrayList<File>();
+      for (String path : codeNarcReportPath.split("\\s*,\\s*")) {
+        File report = context.fileSystem().resolvePath(path);
+        if (!report.isFile()) {
+          LOG.warn("Groovy report " + GroovyPlugin.CODENARC_REPORT_PATH + " not found at {}", report);
+        }
+        reports.add(report);
       }
-      parseReport(context, Collections.singletonList(report));
+      if (!reports.isEmpty()) {
+        parseReport(context, reports);
+      }
     } else {
       // No, run CodeNarc
       runCodeNarc(context);
