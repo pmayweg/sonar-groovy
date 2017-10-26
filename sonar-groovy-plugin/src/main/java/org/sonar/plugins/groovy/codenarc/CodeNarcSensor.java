@@ -74,7 +74,7 @@ public class CodeNarcSensor implements Sensor {
     // Should we reuse existing report from CodeNarc ?
     if (context.settings().hasKey(GroovyPlugin.CODENARC_REPORT_PATH)) {
       // Yes
-      List<String> codeNarcReportPaths = context.settings().getStringArray(GroovyPlugin.CODENARC_REPORT_PATH);
+      String[] codeNarcReportPaths = context.settings().getStringArray(GroovyPlugin.CODENARC_REPORT_PATH);
       List<File> reports = new ArrayList<File>();
       for (String path : codeNarcReportPaths) {
         File report = context.fileSystem().resolvePath(path);
