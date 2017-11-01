@@ -78,10 +78,11 @@ public class CodeNarcSensor implements Sensor {
       List<File> reports = new ArrayList<File>();
       for (String path : codeNarcReportPaths) {
         File report = context.fileSystem().resolvePath(path);
-        if (!report.isFile()) {
+        if (!report.isFile() || !report.exists()) {
           LOG.warn("Groovy report " + GroovyPlugin.CODENARC_REPORT_PATH + " not found at {}", report);
+        } else {
+          reports.add(report);
         }
-        reports.add(report);
       }
       if (!reports.isEmpty()) {
         parseReport(context, reports);
