@@ -74,6 +74,10 @@ public class CodeNarcSensor implements Sensor {
     if (context.settings().hasKey(GroovyPlugin.CODENARC_REPORT_PATHS)) {
       // Yes
       String[] codeNarcReportPaths = context.settings().getStringArray(GroovyPlugin.CODENARC_REPORT_PATHS);
+      String codeNarcReportPath = context.settings().getString(GroovyPlugin.CODENARC_REPORT_PATH);
+      if (codeNarcReportPaths.length == 0) {
+        codeNarcReportPaths = new String[] { codeNarcReportPath };
+      }
       List<File> reports = new ArrayList<File>();
       for (String path : codeNarcReportPaths) {
         File report = context.fileSystem().resolvePath(path);
