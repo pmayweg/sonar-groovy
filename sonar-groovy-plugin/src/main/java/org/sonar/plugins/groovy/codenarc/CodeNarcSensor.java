@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -72,14 +71,14 @@ public class CodeNarcSensor implements Sensor {
   @Override
   public void execute(SensorContext context) {
     // Should we reuse existing report from CodeNarc ?
-    if (context.settings().hasKey(GroovyPlugin.CODENARC_REPORT_PATH)) {
+    if (context.settings().hasKey(GroovyPlugin.CODENARC_REPORT_PATHS)) {
       // Yes
-      String[] codeNarcReportPaths = context.settings().getStringArray(GroovyPlugin.CODENARC_REPORT_PATH);
+      String[] codeNarcReportPaths = context.settings().getStringArray(GroovyPlugin.CODENARC_REPORT_PATHS);
       List<File> reports = new ArrayList<File>();
       for (String path : codeNarcReportPaths) {
         File report = context.fileSystem().resolvePath(path);
         if (!report.isFile() || !report.exists()) {
-          LOG.warn("Groovy report " + GroovyPlugin.CODENARC_REPORT_PATH + " not found at {}", report);
+          LOG.warn("Groovy report " + GroovyPlugin.CODENARC_REPORT_PATHS + " not found at {}", report);
         } else {
           reports.add(report);
         }
