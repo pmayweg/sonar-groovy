@@ -35,6 +35,11 @@
       </dependency>
       <dependency>
         <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-all</artifactId>
+        <version>${groovy.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
         <artifactId>groovy-ant</artifactId>
         <version>${groovy.version}</version>
       </dependency>
@@ -42,11 +47,6 @@
         <groupId>org.codehaus.groovy</groupId>
         <artifactId>groovy-xml</artifactId>
         <version>${groovy.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gmetrics</groupId>
-        <artifactId>GMetrics</artifactId>
-        <version>0.7</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -99,7 +99,7 @@
     <dependency>
       <groupId>org.codenarc</groupId>
       <artifactId>CodeNarc</artifactId>
-      <version>0.27.0</version>
+      <version>1.1</version>
       <exclusions>
         <exclusion>
           <groupId>ant</groupId>

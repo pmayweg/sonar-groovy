@@ -48,7 +48,9 @@ public enum RuleSet {
   // new rule set in 0.16
   CONVENTION("convention"),
   // new rule set in 0.16
-  GROOVYISM("groovyism");
+  GROOVYISM("groovyism"),
+  // new rule set in 1.1
+  ENHANCED("enhanced");
 
   private final String label;
 
