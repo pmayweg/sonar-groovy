@@ -326,11 +326,5 @@
       <priority>MAJOR</priority>
     </rule>
 
-    <rule>
-      <repositoryKey>grvy</repositoryKey>
-      <key>org.codenarc.rule.convention.CouldBeSwitchStatementRule</key>
-      <priority>MAJOR</priority>
-    </rule>
-
   </rules>
 </profile>
