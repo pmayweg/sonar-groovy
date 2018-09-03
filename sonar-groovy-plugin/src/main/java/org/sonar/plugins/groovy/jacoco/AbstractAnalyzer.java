@@ -85,9 +85,9 @@ public abstract class AbstractAnalyzer {
   }
 
   private static String getFileRelativePath(ISourceFileCoverage coverage) {
-    String relativePath = ""
+    String relativePath = "";
     if(coverage.getPackageName() != null && !coverage.getPackageName().isEmpty())
-      relativePath += coverage.getPackageName() + "/"
+      relativePath += coverage.getPackageName() + "/";
     relativePath += coverage.getName();
     return relativePath;
   }
