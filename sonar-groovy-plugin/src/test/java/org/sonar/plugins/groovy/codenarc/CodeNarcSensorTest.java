@@ -19,11 +19,10 @@
  */
 package org.sonar.plugins.groovy.codenarc;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
@@ -31,12 +30,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.sonar.api.batch.fs.InputFile.Type;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.FileMetadata;
+import org.sonar.api.batch.fs.internal.Metadata;
 import org.sonar.api.batch.rule.internal.ActiveRulesBuilder;
 import org.sonar.api.batch.sensor.internal.DefaultSensorDescriptor;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.profiles.RulesProfile;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rules.ActiveRule;
@@ -61,12 +64,13 @@ public class CodeNarcSensorTest {
   @Before
   public void setUp() throws Exception {
 
-    sensorContextTester = SensorContextTester.create(temp.newFolder());
-    sensorContextTester.fileSystem().setWorkDir(temp.newFolder());
+    sensorContextTester = SensorContextTester.create(temp.newFolder().toPath());
+    sensorContextTester.fileSystem().setWorkDir(temp.newFolder().toPath());
 
     profile = mock(RulesProfile.class);
 
-    sensorContextTester.setSettings(new Settings(new PropertyDefinitions(GroovyPlugin.class)));
+
+    sensorContextTester.setSettings(new MapSettings(new PropertyDefinitions(GroovyPlugin.class)));
     groovy = new Groovy(sensorContextTester.settings());
     sensor = new CodeNarcSensor(profile, new GroovyFileSystem(sensorContextTester.fileSystem()));
   }
@@ -213,19 +217,26 @@ public class CodeNarcSensorTest {
 
   private void addFileWithFakeContent(String path) throws UnsupportedEncodingException, IOException {
     File sampleFile = FileUtils.toFile(getClass().getResource("parsing/Sample.groovy"));
-    sensorContextTester.fileSystem().add(new DefaultInputFile(sensorContextTester.module().key(), path)
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(sampleFile.toPath()), "UTF-8")));
+    DefaultIndexedFile indexedFile = getIndexedFile(path);
+
+    Metadata metadata = new FileMetadata().readMetadata(
+            new FileInputStream(sampleFile), StandardCharsets.UTF_8, sampleFile.getName()
+    );
+
+    sensorContextTester.fileSystem().add(new DefaultInputFile(indexedFile, f -> f.setMetadata(metadata)));
   }
 
-  private void addFileWithContent(String path, String content) throws UnsupportedEncodingException, IOException {
-    DefaultInputFile inputFile = new DefaultInputFile(sensorContextTester.module().key(), path)
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(content);
+  private void addFileWithContent(String path, String content) throws IOException {
+    Metadata metadata = new FileMetadata().readMetadata(new StringReader(content));
+    DefaultInputFile inputFile = new DefaultInputFile(getIndexedFile(path), f -> f.setMetadata(metadata));
+
     sensorContextTester.fileSystem().add(inputFile);
     FileUtils.write(inputFile.file(), content, StandardCharsets.UTF_8);
+  }
+
+  private DefaultIndexedFile getIndexedFile(String path) throws IOException {
+    Path baseDir = temp.newFolder().toPath();
+    return new DefaultIndexedFile("ABCDE", baseDir, path, Groovy.KEY);
   }
 
   private static ActiveRulesBuilder activateFakeRule(ActiveRulesBuilder activeRulesBuilder, String ruleKey) {

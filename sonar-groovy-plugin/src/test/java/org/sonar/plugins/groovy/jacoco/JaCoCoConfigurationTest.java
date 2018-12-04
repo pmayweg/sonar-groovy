@@ -22,12 +22,15 @@ package org.sonar.plugins.groovy.jacoco;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.plugins.groovy.foundation.Groovy;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,7 +42,9 @@ public class JaCoCoConfigurationTest {
 
   @Before
   public void setUp() {
-    settings = new Settings(new PropertyDefinitions().addComponents(JaCoCoConfiguration.getPropertyDefinitions()));
+    settings = new MapSettings(
+            new PropertyDefinitions().addComponents(JaCoCoConfiguration.getPropertyDefinitions())
+    );
     fileSystem = new DefaultFileSystem(new File("."));
     jacocoSettings = new JaCoCoConfiguration(settings, fileSystem);
   }
@@ -50,11 +55,11 @@ public class JaCoCoConfigurationTest {
     assertThat(jacocoSettings.shouldExecuteOnProject(true)).isFalse();
     assertThat(jacocoSettings.shouldExecuteOnProject(false)).isFalse();
 
-    fileSystem.add(new DefaultInputFile("", "src/foo/bar.java").setLanguage("java"));
+    fileSystem.add(new DefaultInputFile(getIndexedFile("src/foo/bar.java", "java"), f -> {}));
     assertThat(jacocoSettings.shouldExecuteOnProject(true)).isFalse();
     assertThat(jacocoSettings.shouldExecuteOnProject(false)).isFalse();
 
-    fileSystem.add(new DefaultInputFile("", "src/foo/bar.groovy").setLanguage(Groovy.KEY));
+    fileSystem.add(new DefaultInputFile(getIndexedFile("src/foo/bar.groovy", Groovy.KEY), f -> {}));
     assertThat(jacocoSettings.shouldExecuteOnProject(true)).isTrue();
     assertThat(jacocoSettings.shouldExecuteOnProject(false)).isFalse();
 
@@ -79,5 +84,9 @@ public class JaCoCoConfigurationTest {
   public void shouldReturnReportPathWhenModified() {
     settings.setProperty(JaCoCoConfiguration.REPORT_PATH_PROPERTY, "jacoco.exec");
     assertThat(jacocoSettings.getReportPath()).isEqualTo("jacoco.exec");
+  }
+
+  private static DefaultIndexedFile getIndexedFile(String path, String language) {
+    return new DefaultIndexedFile("", Paths.get("."), path, language);
   }
 }

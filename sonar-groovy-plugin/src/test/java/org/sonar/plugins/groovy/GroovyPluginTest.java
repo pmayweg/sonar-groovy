@@ -21,16 +21,24 @@ package org.sonar.plugins.groovy;
 
 import org.junit.Test;
 import org.sonar.api.Plugin;
+import org.sonar.api.SonarQubeSide;
 import org.sonar.api.SonarQubeVersion;
+import org.sonar.api.SonarRuntime;
+import org.sonar.api.internal.SonarRuntimeImpl;
+import org.sonar.api.utils.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class GroovyPluginTest {
 
+  public static final Version VERSION_7_4 = Version.create(7, 4);
+
   @Test
   public void testExtensions() {
+    SonarRuntime runtime = SonarRuntimeImpl.forSonarQube(VERSION_7_4, SonarQubeSide.SERVER);
+
     GroovyPlugin plugin = new GroovyPlugin();
-    Plugin.Context context = new Plugin.Context(SonarQubeVersion.V5_6);
+    Plugin.Context context = new Plugin.Context(runtime);
     plugin.define(context);
     assertThat(context.getExtensions()).hasSize(17);
   }
