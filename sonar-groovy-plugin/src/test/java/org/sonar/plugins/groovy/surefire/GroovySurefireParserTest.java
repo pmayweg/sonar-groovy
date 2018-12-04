@@ -21,6 +21,9 @@ package org.sonar.plugins.groovy.surefire;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -31,7 +34,9 @@ import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.SensorStrategy;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.component.ResourcePerspectives;
@@ -79,12 +84,11 @@ public class GroovySurefireParserTest {
 
     parser = spy(new GroovySurefireParser(groovy, perspectives, fs));
 
-    doAnswer(new Answer<InputFile>() {
-      @Override
-      public InputFile answer(InvocationOnMock invocation) throws Throwable {
-        return new DefaultInputFile("", (String) invocation.getArguments()[0]);
-      }
-    }).when(parser).getUnitTestInputFile(anyString());
+    doAnswer((Answer<InputFile>) invocation ->
+            new DefaultInputFile(
+                    new DefaultIndexedFile("", Paths.get("."), (String) invocation.getArguments()[0], Groovy.KEY), f -> {}
+            )).when(parser).getUnitTestInputFile(anyString()
+    );
   }
 
   @Test
@@ -214,9 +218,14 @@ public class GroovySurefireParserTest {
   @Test
   public void should_generate_correct_predicate() throws URISyntaxException {
     DefaultFileSystem fs = new DefaultFileSystem(new File("."));
-    DefaultInputFile inputFile = new DefaultInputFile("", "src/test/org/sonar/JavaNCSSCollectorTest.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.TEST);
+    Path baseDir = Paths.get(".");
+    String relativePath = "src/test/org/sonar/JavaNCSSCollectorTest.groovy";
+
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile(
+            baseDir.resolve(relativePath), "", relativePath, relativePath, Type.TEST, Groovy.KEY, 0,
+            new SensorStrategy());
+
+    DefaultInputFile inputFile = new DefaultInputFile(indexedFile, f -> {});
     fs.add(inputFile);
 
     parser = new GroovySurefireParser(groovy, perspectives, fs);

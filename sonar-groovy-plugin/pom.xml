@@ -66,7 +66,7 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>groovy-jacoco-previous</artifactId>
-      <version>${project.version}</version>
+      <version>1.4</version>
     </dependency>
     <dependency>
       <groupId>org.sonarsource.sonarqube</groupId>
@@ -83,6 +83,16 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.staxmate</groupId>
+      <artifactId>staxmate</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.woodstox</groupId>
+      <artifactId>woodstox-core</artifactId>
+      <version>5.0.2</version>
     </dependency>
     <dependency>
       <groupId>commons-lang</groupId>

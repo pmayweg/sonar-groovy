@@ -20,11 +20,16 @@
 package org.sonar.plugins.groovy.foundation;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.sonar.api.batch.fs.InputFile.Type;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.FileMetadata;
+import org.sonar.api.batch.fs.internal.Metadata;
 import org.sonar.api.batch.sensor.highlighting.TypeOfText;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.plugins.groovy.TestUtils;
@@ -37,11 +42,16 @@ public class GroovyHighlighterAndTokenizerTest {
   public void should_highlight_keywords() throws Exception {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Greet.groovy");
 
+    Metadata metadata = new FileMetadata().readMetadata(
+            new FileInputStream(file), StandardCharsets.UTF_8, file.getName());
+
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile(
+            "", file.toPath().getParent(), "Greet.groovy", Groovy.KEY
+    );
+
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Greet.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+    DefaultInputFile inputFile = new DefaultInputFile(indexedFile, f -> f.setMetadata(metadata));
+
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
@@ -68,11 +78,17 @@ public class GroovyHighlighterAndTokenizerTest {
   public void should_tokenize_for_cpd() throws Exception {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Greet.groovy");
 
+    Metadata metadata = new FileMetadata().readMetadata(
+            new FileInputStream(file), StandardCharsets.UTF_8, file.getName()
+    );
+
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile(
+            "", file.toPath().getParent(), "Greet.groovy", Groovy.KEY
+    );
+
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Greet.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+    DefaultInputFile inputFile = new DefaultInputFile(indexedFile, f -> f.setMetadata(metadata));
+
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
@@ -80,15 +96,15 @@ public class GroovyHighlighterAndTokenizerTest {
     highlighter.processFile(context);
 
     assertThat(context.cpdTokens(":Greet.groovy")).extracting("value").containsExactly("classGreet{",
-      "defname",
-      "Greet(who){name=who}",
-      "defsalute(){printlnLITERALnameLITERALnameLITERAL}",
-      "}",
-      "/** * Javadoc style */",
-      "@groovy.beans.Bindable",
-      "classCool{",
-      "doublex=1.4// Comment",
-      "}");
+            "defname",
+            "Greet(who){name=who}",
+            "defsalute(){printlnLITERALnameLITERALnameLITERAL}",
+            "}",
+            "/** * Javadoc style */",
+            "@groovy.beans.Bindable",
+            "classCool{",
+            "doublex=1.4// Comment",
+            "}");
     Mockito.verify(context, Mockito.times(1)).newCpdTokens();
   }
 
@@ -96,10 +112,17 @@ public class GroovyHighlighterAndTokenizerTest {
   public void should_highlight_nothing_if_file_is_missing() throws Exception {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Greet.groovy");
 
+    Metadata metadata = new FileMetadata().readMetadata(
+            new FileInputStream(file), StandardCharsets.UTF_8, file.getName()
+    );
+
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile(
+            "", file.toPath().getParent(), "Greet-fake.groovy", Groovy.KEY
+    );
+
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Greet-fake.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN);
+    DefaultInputFile inputFile = new DefaultInputFile(indexedFile, f -> f.setMetadata(metadata));
+
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
@@ -114,11 +137,17 @@ public class GroovyHighlighterAndTokenizerTest {
   public void should_highlight_only_partially_if_file_can_not_be_lexed() throws Exception {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Error.groovy");
 
+    Metadata metadata = new FileMetadata().readMetadata(
+            new FileInputStream(file), StandardCharsets.UTF_8, file.getName()
+    );
+
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile(
+            "", file.toPath().getParent(), "Error.groovy", Groovy.KEY
+    );
+
+    DefaultInputFile inputFile = new DefaultInputFile(indexedFile, f -> f.setMetadata(metadata));
+
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Error.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);

@@ -25,7 +25,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.SensorStrategy;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.internal.DefaultSensorDescriptor;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
@@ -39,6 +41,8 @@ import org.sonar.plugins.groovy.surefire.api.SurefireUtils;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -62,8 +66,8 @@ public class GroovySurefireSensorTest {
   @Before
   public void before() {
     fs = new DefaultFileSystem(new File("."));
-    DefaultInputFile groovyFile = new DefaultInputFile("", "src/org/foo/grvy");
-    groovyFile.setLanguage(Groovy.KEY);
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile("", Paths.get("."), "src/org/foo/grvy", Groovy.KEY);
+    DefaultInputFile groovyFile = new DefaultInputFile(indexedFile, f -> {});
     fs.add(groovyFile);
     perspectives = mock(ResourcePerspectives.class);
 
@@ -137,7 +141,13 @@ public class GroovySurefireSensorTest {
   }
 
   private static DefaultInputFile inputFile(String key) {
-    return new DefaultInputFile("", key).setType(InputFile.Type.TEST);
+    Path baseDir = Paths.get(".");
+
+    DefaultIndexedFile indexedFile = new DefaultIndexedFile(
+            baseDir.resolve(key), "", key, key, InputFile.Type.TEST, Groovy.KEY, 0,
+            new SensorStrategy());
+
+    return new DefaultInputFile(indexedFile, f -> {});
   }
 
   @Test
