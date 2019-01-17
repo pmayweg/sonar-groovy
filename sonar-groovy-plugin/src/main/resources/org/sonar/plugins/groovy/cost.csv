@@ -345,3 +345,14 @@ org.codenarc.rule.unused.UnusedPrivateFieldRule;linear;5min
 org.codenarc.rule.unused.UnusedPrivateMethodParameterRule;linear;5min
 org.codenarc.rule.unused.UnusedPrivateMethodRule;linear;5min
 org.codenarc.rule.unused.UnusedVariableRule.fixed;linear;5min
+org.codenarc.rule.convention.CouldBeSwitchStatementRule;linear;5min
+org.codenarc.rule.unnecessary.UnnecessarySetterRule;linear;5min
+org.codenarc.rule.enhanced.MissingOverrideAnnotationRule;linear;5min
+org.codenarc.rule.formatting.IndentationRule;linear;5min
+org.codenarc.rule.convention.InvertedConditionRule;linear;5min
+org.codenarc.rule.convention.MethodReturnTypeRequiredRule;linear;5min
+org.codenarc.rule.convention.MethodParameterTypeRequired;linear;5min
+org.codenarc.rule.convention.FieldTypeRequiredRule;linear;5min
+org.codenarc.rule.convention.VariableTypeRequiredRule;linear;5min
+org.codenarc.rule.formatting.BlockStartsWithBlankLineRule;linear;5min
+org.codenarc.rule.formatting.BlockEndsWithBlankLineRule;linear;5min

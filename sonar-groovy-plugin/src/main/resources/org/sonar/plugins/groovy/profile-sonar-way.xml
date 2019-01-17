@@ -49,11 +49,6 @@
     </rule>
     <rule>
       <repositoryKey>grvy</repositoryKey>
-      <key>org.codenarc.rule.grails.GrailsSessionReferenceRule</key>
-      <priority>MAJOR</priority>
-    </rule>
-    <rule>
-      <repositoryKey>grvy</repositoryKey>
       <key>org.codenarc.rule.grails.GrailsStatelessServiceRule</key>
       <priority>MAJOR</priority>
     </rule>
@@ -325,9 +320,11 @@
       <priority>MINOR</priority>
     </rule>
 
-
-
-
+    <rule>
+      <repositoryKey>grvy</repositoryKey>
+      <key>org.codenarc.rule.convention.InvertedConditionRule</key>
+      <priority>MAJOR</priority>
+    </rule>
 
   </rules>
 </profile>
