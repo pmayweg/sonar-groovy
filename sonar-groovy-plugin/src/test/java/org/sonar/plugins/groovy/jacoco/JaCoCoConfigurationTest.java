@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,42 +19,41 @@
  */
 package org.sonar.plugins.groovy.jacoco;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
-import org.sonar.api.batch.fs.internal.DefaultInputFile;
-import org.sonar.api.config.PropertyDefinitions;
-import org.sonar.api.config.Settings;
+import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
+import org.sonar.api.config.internal.MapSettings;
+import org.sonar.plugins.groovy.TestUtils;
 import org.sonar.plugins.groovy.foundation.Groovy;
-
-import java.io.File;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class JaCoCoConfigurationTest {
 
-  private Settings settings;
+  private MapSettings settings = TestUtils.jacocoDefaultSettings();
   private JaCoCoConfiguration jacocoSettings;
   private DefaultFileSystem fileSystem;
 
   @Before
   public void setUp() {
-    settings = new Settings(new PropertyDefinitions().addComponents(JaCoCoConfiguration.getPropertyDefinitions()));
-    fileSystem = new DefaultFileSystem(new File("."));
+    fileSystem = new DefaultFileSystem(Paths.get("."));
     jacocoSettings = new JaCoCoConfiguration(settings, fileSystem);
   }
 
   @Test
-  public void shouldExecuteOnProject() throws Exception {
+  public void shouldExecuteOnProject() {
     // no files
     assertThat(jacocoSettings.shouldExecuteOnProject(true)).isFalse();
     assertThat(jacocoSettings.shouldExecuteOnProject(false)).isFalse();
 
-    fileSystem.add(new DefaultInputFile("", "src/foo/bar.java").setLanguage("java"));
+    fileSystem.add(TestInputFileBuilder.create("", "src/foo/bar.java").setLanguage("java").build());
     assertThat(jacocoSettings.shouldExecuteOnProject(true)).isFalse();
     assertThat(jacocoSettings.shouldExecuteOnProject(false)).isFalse();
 
-    fileSystem.add(new DefaultInputFile("", "src/foo/bar.groovy").setLanguage(Groovy.KEY));
+    fileSystem.add(
+        TestInputFileBuilder.create("", "src/foo/bar.groovy").setLanguage(Groovy.KEY).build());
     assertThat(jacocoSettings.shouldExecuteOnProject(true)).isTrue();
     assertThat(jacocoSettings.shouldExecuteOnProject(false)).isFalse();
 

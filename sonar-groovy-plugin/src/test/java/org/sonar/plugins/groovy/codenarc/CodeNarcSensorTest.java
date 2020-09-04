@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,60 +19,51 @@
  */
 package org.sonar.plugins.groovy.codenarc;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
+import java.nio.file.Path;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputFile.Type;
-import org.sonar.api.batch.fs.internal.DefaultInputFile;
-import org.sonar.api.batch.rule.internal.ActiveRulesBuilder;
+import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 import org.sonar.api.batch.sensor.internal.DefaultSensorDescriptor;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
-import org.sonar.api.config.PropertyDefinitions;
-import org.sonar.api.config.Settings;
-import org.sonar.api.profiles.RulesProfile;
-import org.sonar.api.rule.RuleKey;
-import org.sonar.api.rules.ActiveRule;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.plugins.groovy.GroovyPlugin;
 import org.sonar.plugins.groovy.foundation.Groovy;
 import org.sonar.plugins.groovy.foundation.GroovyFileSystem;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class CodeNarcSensorTest {
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
 
-  private RulesProfile profile;
-  private CodeNarcSensor sensor;
-  private Groovy groovy;
   private SensorContextTester sensorContextTester;
-
-  @org.junit.Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  private MapSettings settings = new MapSettings();
 
   @Before
   public void setUp() throws Exception {
-
     sensorContextTester = SensorContextTester.create(temp.newFolder());
-    sensorContextTester.fileSystem().setWorkDir(temp.newFolder());
+    sensorContextTester.fileSystem().setWorkDir(temp.newFolder().toPath());
 
-    profile = mock(RulesProfile.class);
-
-    sensorContextTester.setSettings(new Settings(new PropertyDefinitions(GroovyPlugin.class)));
-    groovy = new Groovy(sensorContextTester.settings());
-    sensor = new CodeNarcSensor(profile, new GroovyFileSystem(sensorContextTester.fileSystem()));
+    sensorContextTester.setSettings(settings);
   }
 
   @Test
   public void test_description() {
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(null, new GroovyFileSystem(sensorContextTester.fileSystem()));
     DefaultSensorDescriptor defaultSensorDescriptor = new DefaultSensorDescriptor();
     sensor.describe(defaultSensorDescriptor);
     assertThat(defaultSensorDescriptor.languages()).containsOnly(Groovy.KEY);
@@ -81,32 +72,38 @@ public class CodeNarcSensorTest {
   @Test
   public void should_parse() throws Exception {
 
-    ActiveRulesBuilder activeRulesBuilder = new ActiveRulesBuilder();
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "BooleanInstantiation");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "DuplicateImport");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyCatchBlock");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyElseBlock");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyFinallyBlock");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyForStatement");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyIfStatement");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyTryBlock");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "EmptyWhileStatement");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "ImportFromSamePackage");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "ReturnFromFinallyBlock");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "StringInstantiation");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "ThrowExceptionFromFinallyBlock");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "UnnecessaryGroovyImport");
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "UnusedImport");
+    ActiveRulesBuilderWrapper activeRulesBuilder =
+        new ActiveRulesBuilderWrapper()
+            .addRule("BooleanInstantiation")
+            .addRule("DuplicateImport")
+            .addRule("EmptyCatchBlock")
+            .addRule("EmptyElseBlock")
+            .addRule("EmptyFinallyBlock")
+            .addRule("EmptyForStatement")
+            .addRule("EmptyIfStatement")
+            .addRule("EmptyTryBlock")
+            .addRule("EmptyWhileStatement")
+            .addRule("ImportFromSamePackage")
+            .addRule("ReturnFromFinallyBlock")
+            .addRule("StringInstantiation")
+            .addRule("ThrowExceptionFromFinallyBlock")
+            .addRule("UnnecessaryGroovyImport")
+            .addRule("UnusedImport");
     sensorContextTester.setActiveRules(activeRulesBuilder.build());
 
-    File reportUpdated = getReportWithUpdatedSourceDir();
-    sensorContextTester.settings().setProperty(GroovyPlugin.CODENARC_REPORT_PATHS, reportUpdated.getAbsolutePath());
+    Path reportUpdated = getReportWithUpdatedSourceDir();
+    settings.setProperty(
+        GroovyPlugin.CODENARC_REPORT_PATHS, reportUpdated.toAbsolutePath().toString());
 
     addFileWithFakeContent("src/org/codenarc/sample/domain/SampleDomain.groovy");
     addFileWithFakeContent("src/org/codenarc/sample/service/NewService.groovy");
     addFileWithFakeContent("src/org/codenarc/sample/service/OtherService.groovy");
     addFileWithFakeContent("src/org/codenarc/sample/service/SampleService.groovy");
 
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(
+            sensorContextTester.activeRules(),
+            new GroovyFileSystem(sensorContextTester.fileSystem()));
     sensor.execute(sensorContextTester);
 
     assertThat(sensorContextTester.allIssues()).hasSize(17);
@@ -115,18 +112,23 @@ public class CodeNarcSensorTest {
   @Test
   public void should_parse_but_not_add_issue_if_rule_not_found() throws Exception {
 
-    ActiveRulesBuilder activeRulesBuilder = new ActiveRulesBuilder();
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "UnknownRule");
+    ActiveRulesBuilderWrapper activeRulesBuilder =
+        new ActiveRulesBuilderWrapper().addRule("UnknownRule");
     sensorContextTester.setActiveRules(activeRulesBuilder.build());
 
-    File reportUpdated = getReportWithUpdatedSourceDir();
-    sensorContextTester.settings().setProperty(GroovyPlugin.CODENARC_REPORT_PATHS, reportUpdated.getAbsolutePath());
+    Path reportUpdated = getReportWithUpdatedSourceDir();
+    settings.setProperty(
+        GroovyPlugin.CODENARC_REPORT_PATHS, reportUpdated.toAbsolutePath().toString());
 
     addFileWithFakeContent("src/org/codenarc/sample/domain/SampleDomain.groovy");
     addFileWithFakeContent("src/org/codenarc/sample/service/NewService.groovy");
     addFileWithFakeContent("src/org/codenarc/sample/service/OtherService.groovy");
     addFileWithFakeContent("src/org/codenarc/sample/service/SampleService.groovy");
 
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(
+            sensorContextTester.activeRules(),
+            new GroovyFileSystem(sensorContextTester.fileSystem()));
     sensor.execute(sensorContextTester);
 
     assertThat(sensorContextTester.allIssues()).isEmpty();
@@ -135,15 +137,20 @@ public class CodeNarcSensorTest {
   @Test
   public void should_parse_but_not_add_issue_if_inputFile_not_found() throws Exception {
 
-    ActiveRulesBuilder activeRulesBuilder = new ActiveRulesBuilder();
-    activeRulesBuilder = activateFakeRule(activeRulesBuilder, "BooleanInstantiation");
+    ActiveRulesBuilderWrapper activeRulesBuilder =
+        new ActiveRulesBuilderWrapper().addRule("BooleanInstantiation");
     sensorContextTester.setActiveRules(activeRulesBuilder.build());
 
-    File reportUpdated = getReportWithUpdatedSourceDir();
-    sensorContextTester.settings().setProperty(GroovyPlugin.CODENARC_REPORT_PATHS, reportUpdated.getAbsolutePath());
+    Path reportUpdated = getReportWithUpdatedSourceDir();
+    settings.setProperty(
+        GroovyPlugin.CODENARC_REPORT_PATHS, reportUpdated.toAbsolutePath().toString());
 
     addFileWithFakeContent("src/org/codenarc/sample/domain/Unknown.groovy");
 
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(
+            sensorContextTester.activeRules(),
+            new GroovyFileSystem(sensorContextTester.fileSystem()));
     sensor.execute(sensorContextTester);
 
     assertThat(sensorContextTester.allIssues()).isEmpty();
@@ -154,14 +161,16 @@ public class CodeNarcSensorTest {
 
     addFileWithContent("src/sample.groovy", "package source\nclass SourceFile1 {\n}");
 
-    ActiveRulesBuilder activeRulesBuilder = new ActiveRulesBuilder();
-    activeRulesBuilder = activateRule(activeRulesBuilder, "org.codenarc.rule.basic.EmptyClassRule", "EmptyClass");
+    ActiveRulesBuilderWrapper activeRulesBuilder =
+        new ActiveRulesBuilderWrapper()
+            .addRule("org.codenarc.rule.basic.EmptyClassRule")
+            .setInternalKey("EmptyClass");
     sensorContextTester.setActiveRules(activeRulesBuilder.build());
 
-    ActiveRule activeRule = mock(ActiveRule.class);
-    when(activeRule.getRuleKey()).thenReturn("org.codenarc.rule.basic.EmptyClassRule");
-    when(profile.getActiveRulesByRepository(CodeNarcRulesDefinition.REPOSITORY_KEY)).thenReturn(Arrays.asList(activeRule));
-
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(
+            sensorContextTester.activeRules(),
+            new GroovyFileSystem(sensorContextTester.fileSystem()));
     sensor.execute(sensorContextTester);
 
     assertThat(sensorContextTester.allIssues()).hasSize(1);
@@ -170,14 +179,18 @@ public class CodeNarcSensorTest {
   @Test
   public void should_do_nothing_when_can_not_find_report_path() throws Exception {
 
-    sensorContextTester.settings().setProperty(GroovyPlugin.CODENARC_REPORT_PATHS, "../missing_file.xml");
+    settings.setProperty(GroovyPlugin.CODENARC_REPORT_PATHS, "../missing_file.xml");
 
     addFileWithFakeContent("src/org/codenarc/sample/domain/Unknown.groovy");
 
-    ActiveRulesBuilder activeRulesBuilder = new ActiveRulesBuilder();
-    activeRulesBuilder = activateRule(activeRulesBuilder, "org.codenarc.rule.basic.EmptyClassRule", "EmptyClass");
+    ActiveRulesBuilderWrapper activeRulesBuilder =
+        new ActiveRulesBuilderWrapper().addRule("org.codenarc.rule.basic.EmptyClassRule");
     sensorContextTester.setActiveRules(activeRulesBuilder.build());
 
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(
+            sensorContextTester.activeRules(),
+            new GroovyFileSystem(sensorContextTester.fileSystem()));
     sensor.execute(sensorContextTester);
 
     assertThat(sensorContextTester.allIssues()).isEmpty();
@@ -189,51 +202,61 @@ public class CodeNarcSensorTest {
     addFileWithContent("src/sample.groovy", "package source\nclass SourceFile1 {\n}");
     addFileWithContent("src/foo/bar/qix/sample.groovy", "package source\nclass SourceFile1 {\n}");
 
-    ActiveRulesBuilder activeRulesBuilder = new ActiveRulesBuilder();
-    activeRulesBuilder = activateRule(activeRulesBuilder, "org.codenarc.rule.basic.EmptyClassRule", "EmptyClass");
+    ActiveRulesBuilderWrapper activeRulesBuilder =
+        new ActiveRulesBuilderWrapper()
+            .addRule("org.codenarc.rule.basic.EmptyClassRule")
+            .setInternalKey("EmptyClass");
     sensorContextTester.setActiveRules(activeRulesBuilder.build());
 
-    ActiveRule activeRule = mock(ActiveRule.class);
-    when(activeRule.getRuleKey()).thenReturn("org.codenarc.rule.basic.EmptyClassRule");
-    when(profile.getActiveRulesByRepository(CodeNarcRulesDefinition.REPOSITORY_KEY)).thenReturn(Arrays.asList(activeRule));
-
+    CodeNarcSensor sensor =
+        new CodeNarcSensor(
+            sensorContextTester.activeRules(),
+            new GroovyFileSystem(sensorContextTester.fileSystem()));
     sensor.execute(sensorContextTester);
 
     assertThat(sensorContextTester.allIssues()).hasSize(2);
   }
 
-  private File getReportWithUpdatedSourceDir() throws IOException {
-    File report = FileUtils.toFile(getClass().getResource("parsing/sample.xml"));
-    File reportUpdated = temp.newFile();
-    String newSourceDir = sensorContextTester.fileSystem().baseDir().toPath().resolve("src").toAbsolutePath().toString().replaceAll("\\\\", "/");
-    FileUtils.write(reportUpdated,
-      FileUtils.readFileToString(report).replaceAll(Pattern.quote("[sourcedir]"), newSourceDir));
+  private Path getReportWithUpdatedSourceDir() throws IOException {
+    Path reportUpdated = temp.newFile().toPath();
+    String newSourceDir =
+        sensorContextTester
+            .fileSystem()
+            .baseDirPath()
+            .resolve("src")
+            .toAbsolutePath()
+            .toString()
+            .replaceAll("\\\\", "/");
+    try (InputStream report = getClass().getResourceAsStream("parsing/sample.xml");
+        Writer reportWriter = Files.newBufferedWriter(reportUpdated)) {
+      IOUtils.write(
+          IOUtils.toString(report, StandardCharsets.UTF_8)
+              .replaceAll(Pattern.quote("[sourcedir]"), newSourceDir),
+          reportWriter);
+    }
     return reportUpdated;
   }
 
-  private void addFileWithFakeContent(String path) throws UnsupportedEncodingException, IOException {
+  private void addFileWithFakeContent(String path)
+      throws UnsupportedEncodingException, IOException {
     File sampleFile = FileUtils.toFile(getClass().getResource("parsing/Sample.groovy"));
-    sensorContextTester.fileSystem().add(new DefaultInputFile(sensorContextTester.module().key(), path)
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(sampleFile.toPath()), "UTF-8")));
+    sensorContextTester
+        .fileSystem()
+        .add(
+            TestInputFileBuilder.create(sensorContextTester.module().key(), path)
+                .setLanguage(Groovy.KEY)
+                .setType(Type.MAIN)
+                .setContents(new String(Files.readAllBytes(sampleFile.toPath()), "UTF-8"))
+                .build());
   }
 
-  private void addFileWithContent(String path, String content) throws UnsupportedEncodingException, IOException {
-    DefaultInputFile inputFile = new DefaultInputFile(sensorContextTester.module().key(), path)
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(content);
+  private void addFileWithContent(String path, String content) {
+    InputFile inputFile =
+        TestInputFileBuilder.create(sensorContextTester.module().key(), path)
+            .setLanguage(Groovy.KEY)
+            .setType(Type.MAIN)
+            .setContents(content)
+            .build();
     sensorContextTester.fileSystem().add(inputFile);
-    FileUtils.write(inputFile.file(), content, StandardCharsets.UTF_8);
   }
-
-  private static ActiveRulesBuilder activateFakeRule(ActiveRulesBuilder activeRulesBuilder, String ruleKey) {
-    return activateRule(activeRulesBuilder, ruleKey, ruleKey);
-  }
-
-  private static ActiveRulesBuilder activateRule(ActiveRulesBuilder activeRulesBuilder, String ruleKey, String internalKey) {
-    return activeRulesBuilder.create(RuleKey.of(CodeNarcRulesDefinition.REPOSITORY_KEY, ruleKey)).setInternalKey(internalKey).activate();
-  }
-
 }

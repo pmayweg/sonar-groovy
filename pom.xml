@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" child.project.url.inherit.append.path="false">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.sonarsource.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>36</version>
+    <version>53</version>
   </parent>
 
   <groupId>org.sonarsource.groovy</groupId>
   <artifactId>groovy</artifactId>
-  <version>1.6-RC2-SNAPSHOT</version>
+  <version>1.7-CIT-MVN-162-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Sonar Groovy</name>
+  <description>This plugin enables analysis of Groovy within SonarQube.</description>
+  <url>http://redirect.sonarsource.com/plugins/groovy.html</url>
   <inceptionYear>2010</inceptionYear>
   <organization>
-    <name>SonarSource</name>
-    <url>http://www.sonarsource.com</url>
+    <name>SonarQube Community</name>
   </organization>
   <licenses>
     <license>
@@ -28,6 +29,10 @@
   </licenses>
 
   <developers>
+    <developer>
+      <id>TobiX</id>
+      <name>Tobias Gruetzmacher</name>
+    </developer>
     <developer>
       <id>pmayweg</id>
       <name>Patrick Mayweg</name>
@@ -44,28 +49,148 @@
 
   <modules>
     <module>sonar-groovy-plugin</module>
-    <module>groovy-jacoco-previous</module>
+    <module>codenarc-converter</module>
   </modules>
 
-  <scm>
-    <connection>scm:git:git@github.com:pmayweg/sonar-groovy.git</connection>
-    <developerConnection>scm:git:git@github.com:pmayweg/sonar-groovy.git</developerConnection>
-    <url>https://github.com/pmayweg/sonar-groovy</url>
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false">
+    <connection>scm:git:git@github.com:Inform-Software/sonar-groovy.git</connection>
+    <developerConnection>scm:git:git@github.com:Inform-Software/sonar-groovy.git
+    </developerConnection>
+    <url>https://github.com/Inform-Software/sonar-groovy/tree/master</url>
     <tag>HEAD</tag>
   </scm>
   <issueManagement>
     <system>GitHub</system>
-    <url>https://github.com/pmayweg/sonar-groovy/issues</url>
+    <url>https://github.com/Inform-Software/sonar-groovy/issues</url>
   </issueManagement>
-  
+  <ciManagement>
+    <system>travis-ci</system>
+    <url>https://travis-ci.com/Inform-Software/sonar-groovy</url>
+  </ciManagement>
+  <distributionManagement>
+    <repository>
+      <id>bintray-tobix-sonar-groovy</id>
+      <name>TobiX-sonar-groovy</name>
+      <url>https://api.bintray.com/maven/tobix/sonar-groovy/sonar-groovy/;publish=1</url>
+    </repository>
+  </distributionManagement>
+
   <properties>
-    <sonar.version>5.6</sonar.version>
-    <jacoco.previous.version>0.7.4.201502262128</jacoco.previous.version>
-    <jacoco.version>0.7.5.201505241946</jacoco.version>
-    <groovy.version>2.4.4</groovy.version>
+    <sonar.version>7.8</sonar.version>
+    <groovy.version>2.4.17</groovy.version>
     <orchestrator.version>3.11</orchestrator.version>
-    <!-- used for deployment to SonarSource Artifactory -->
-    <gitRepositoryName>sonar-groovy</gitRepositoryName>
+    <maven.min.version>3.3.9</maven.min.version>
+    <license.owner>SonarSource SA &amp; Community</license.owner>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-all</artifactId>
+        <version>${groovy.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-xml</artifactId>
+        <version>${groovy.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.sonarsource.sonarqube</groupId>
+        <artifactId>sonar-plugin-api</artifactId>
+        <version>${sonar.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gmetrics</groupId>
+        <artifactId>GMetrics</artifactId>
+        <version>1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codenarc</groupId>
+        <artifactId>CodeNarc</artifactId>
+        <version>1.4</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-ant</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.6</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>1.7.28</version>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>3.14.0</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <repositories>
+    <repository>
+      <id>sonarsource-bintray</id>
+      <name>SonarSource Bintray Release repository</name>
+      <url>https://dl.bintray.com/sonarsource/SonarQube</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.coveo</groupId>
+          <artifactId>fmt-maven-plugin</artifactId>
+          <version>2.9</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5.3</version>
+          <configuration>
+            <autoVersionSubmodules>true</autoVersionSubmodules>
+            <tagNameFormat>@{project.version}</tagNameFormat>
+            <goals>install</goals>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <profile>
+      <!-- TODO: Move into "normal" dependencies when we move our minimal SonarQube version to 8.0 or later -->
+      <id>testModernSonarQube</id>
+      <dependencies>
+        <!-- "Internal" test classes (only exists for SonarQube >= 8.0) -->
+        <dependency>
+          <groupId>org.sonarsource.sonarqube</groupId>
+          <artifactId>sonar-plugin-api-impl</artifactId>
+          <version>${sonar.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>

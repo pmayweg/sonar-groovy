@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,14 +23,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.CheckForNull;
-import org.sonar.api.batch.BatchSide;
+import org.sonar.api.batch.ScannerSide;
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FilePredicates;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputFile.Type;
 
-@BatchSide
+@ScannerSide
 public class GroovyFileSystem {
 
   private final FileSystem fileSystem;
@@ -49,13 +49,6 @@ public class GroovyFileSystem {
     return fileSystem.hasFiles(isGroovyLanguage);
   }
 
-  public List<File> sourceFiles() {
-    Iterable<File> files = fileSystem.files(predicates.and(isGroovyLanguage, isMainTypeFile));
-    List<File> list = new ArrayList<>();
-    files.iterator().forEachRemaining(list::add);
-    return list;
-  }
-
   public List<InputFile> groovyInputFiles() {
     Iterable<InputFile> inputFiles = fileSystem.inputFiles(isGroovyLanguage);
     List<InputFile> list = new ArrayList<>();
@@ -64,7 +57,8 @@ public class GroovyFileSystem {
   }
 
   public List<InputFile> sourceInputFiles() {
-    Iterable<InputFile> inputFiles = fileSystem.inputFiles(predicates.and(isGroovyLanguage, isMainTypeFile));
+    Iterable<InputFile> inputFiles =
+        fileSystem.inputFiles(predicates.and(isGroovyLanguage, isMainTypeFile));
     List<InputFile> list = new ArrayList<>();
     inputFiles.iterator().forEachRemaining(list::add);
     return list;
@@ -72,11 +66,12 @@ public class GroovyFileSystem {
 
   @CheckForNull
   public InputFile sourceInputFileFromRelativePath(String relativePath) {
-    return fileSystem.inputFile(predicates.and(predicates.matchesPathPattern("**/" + relativePath), isGroovyLanguage, isMainTypeFile));
+    return fileSystem.inputFile(
+        predicates.and(
+            predicates.matchesPathPattern("**/" + relativePath), isGroovyLanguage, isMainTypeFile));
   }
 
   public File baseDir() {
     return fileSystem.baseDir();
   }
-
 }

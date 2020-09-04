@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,17 +19,18 @@
  */
 package org.sonar.plugins.groovy.foundation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.nio.file.Files;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputFile.Type;
-import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 import org.sonar.api.batch.sensor.highlighting.TypeOfText;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.plugins.groovy.TestUtils;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class GroovyHighlighterAndTokenizerTest {
 
@@ -38,10 +39,12 @@ public class GroovyHighlighterAndTokenizerTest {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Greet.groovy");
 
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Greet.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+    InputFile inputFile =
+        TestInputFileBuilder.create("", file.getParentFile(), file)
+            .setLanguage(Groovy.KEY)
+            .setType(Type.MAIN)
+            .setContents(new String(Files.readAllBytes(file.toPath()), "UTF-8"))
+            .build();
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
@@ -53,14 +56,21 @@ public class GroovyHighlighterAndTokenizerTest {
     assertThat(context.highlightingTypeAt(":Greet.groovy", 4, 2)).containsOnly(TypeOfText.KEYWORD);
     assertThat(context.highlightingTypeAt(":Greet.groovy", 4, 25)).containsOnly(TypeOfText.STRING);
     assertThat(context.highlightingTypeAt(":Greet.groovy", 4, 32)).containsOnly(TypeOfText.STRING);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 7, 0)).containsOnly(TypeOfText.STRUCTURED_COMMENT);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 8, 1)).containsOnly(TypeOfText.STRUCTURED_COMMENT);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 9, 1)).containsOnly(TypeOfText.STRUCTURED_COMMENT);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 10, 0)).containsOnly(TypeOfText.ANNOTATION);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 10, 21)).containsOnly(TypeOfText.ANNOTATION);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 7, 0))
+        .containsOnly(TypeOfText.STRUCTURED_COMMENT);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 8, 1))
+        .containsOnly(TypeOfText.STRUCTURED_COMMENT);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 9, 1))
+        .containsOnly(TypeOfText.STRUCTURED_COMMENT);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 10, 0))
+        .containsOnly(TypeOfText.ANNOTATION);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 10, 21))
+        .containsOnly(TypeOfText.ANNOTATION);
     assertThat(context.highlightingTypeAt(":Greet.groovy", 12, 2)).containsOnly(TypeOfText.KEYWORD);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 12, 13)).containsOnly(TypeOfText.CONSTANT);
-    assertThat(context.highlightingTypeAt(":Greet.groovy", 12, 17)).containsOnly(TypeOfText.COMMENT);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 12, 13))
+        .containsOnly(TypeOfText.CONSTANT);
+    assertThat(context.highlightingTypeAt(":Greet.groovy", 12, 17))
+        .containsOnly(TypeOfText.COMMENT);
     Mockito.verify(context, Mockito.times(1)).newHighlighting();
   }
 
@@ -69,26 +79,31 @@ public class GroovyHighlighterAndTokenizerTest {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Greet.groovy");
 
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Greet.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+    InputFile inputFile =
+        TestInputFileBuilder.create("", file.getParentFile(), file)
+            .setLanguage(Groovy.KEY)
+            .setType(Type.MAIN)
+            .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"))
+            .build();
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
     context = Mockito.spy(context);
     highlighter.processFile(context);
 
-    assertThat(context.cpdTokens(":Greet.groovy")).extracting("value").containsExactly("classGreet{",
-      "defname",
-      "Greet(who){name=who}",
-      "defsalute(){printlnLITERALnameLITERALnameLITERAL}",
-      "}",
-      "/** * Javadoc style */",
-      "@groovy.beans.Bindable",
-      "classCool{",
-      "doublex=1.4// Comment",
-      "}");
+    assertThat(context.cpdTokens(":Greet.groovy"))
+        .extracting("value")
+        .containsExactly(
+            "classGreet{",
+            "defname",
+            "Greet(who){name=who}",
+            "defsalute(){printlnLITERALnameLITERALnameLITERAL}",
+            "}",
+            "/** * Javadoc style */",
+            "@groovy.beans.Bindable",
+            "classCool{",
+            "doublex=1.4// Comment",
+            "}");
     Mockito.verify(context, Mockito.times(1)).newCpdTokens();
   }
 
@@ -97,9 +112,11 @@ public class GroovyHighlighterAndTokenizerTest {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Greet.groovy");
 
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Greet-fake.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN);
+    InputFile inputFile =
+        TestInputFileBuilder.create("", "Greet-fake.groovy")
+            .setLanguage(Groovy.KEY)
+            .setType(Type.MAIN)
+            .build();
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
@@ -115,10 +132,12 @@ public class GroovyHighlighterAndTokenizerTest {
     File file = TestUtils.getResource("/org/sonar/plugins/groovy/foundation/Error.groovy");
 
     SensorContextTester context = SensorContextTester.create(file.getParentFile());
-    DefaultInputFile inputFile = new DefaultInputFile("", "Error.groovy")
-      .setLanguage(Groovy.KEY)
-      .setType(Type.MAIN)
-      .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+    InputFile inputFile =
+        TestInputFileBuilder.create("", file.getParentFile(), file)
+            .setLanguage(Groovy.KEY)
+            .setType(Type.MAIN)
+            .initMetadata(new String(Files.readAllBytes(file.toPath()), "UTF-8"))
+            .build();
     context.fileSystem().add(inputFile);
 
     GroovyHighlighterAndTokenizer highlighter = new GroovyHighlighterAndTokenizer(inputFile);
@@ -131,5 +150,4 @@ public class GroovyHighlighterAndTokenizerTest {
     assertThat(context.highlightingTypeAt(":Error.groovy", 3, 2)).isEmpty();
     Mockito.verify(context, Mockito.times(1)).newHighlighting();
   }
-
 }

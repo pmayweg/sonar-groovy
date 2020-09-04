@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 package org.sonar.plugins.groovy.foundation;
 
 import org.junit.Test;
-import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.plugins.groovy.GroovyPlugin;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +29,7 @@ public class GroovyTest {
 
   @Test
   public void test() {
-    Settings settings = new Settings();
+    MapSettings settings = new MapSettings();
     Groovy language = new Groovy(settings);
     assertThat(language.getKey()).isEqualTo("grvy");
     assertThat(language.getName()).isEqualTo("Groovy");

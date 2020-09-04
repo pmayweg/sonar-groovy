@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,15 +19,14 @@
  */
 package org.sonar.plugins.groovy.foundation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
-import org.sonar.api.batch.fs.internal.DefaultInputFile;
-
-import java.io.File;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 
 public class GroovyFileSystemTest {
 
@@ -36,7 +35,7 @@ public class GroovyFileSystemTest {
 
   @Before
   public void setUp() {
-    fileSystem = new DefaultFileSystem(new File("."));
+    fileSystem = new DefaultFileSystem(Paths.get("."));
     groovyFileSystem = new GroovyFileSystem(fileSystem);
   }
 
@@ -44,35 +43,32 @@ public class GroovyFileSystemTest {
   public void isEnabled() {
     assertThat(groovyFileSystem.hasGroovyFiles()).isFalse();
 
-    fileSystem.add(new DefaultInputFile("", "fake.file"));
+    fileSystem.add(TestInputFileBuilder.create("", "fake.file").build());
     assertThat(groovyFileSystem.hasGroovyFiles()).isFalse();
 
-    fileSystem.add(new DefaultInputFile("", "fake.groovy").setLanguage(Groovy.KEY));
+    fileSystem.add(TestInputFileBuilder.create("", "fake.groovy").setLanguage(Groovy.KEY).build());
     assertThat(groovyFileSystem.hasGroovyFiles()).isTrue();
-  }
-
-  @Test
-  public void getSourceFile() {
-    assertThat(groovyFileSystem.sourceFiles()).isEmpty();
-
-    fileSystem.add(new DefaultInputFile("", "fake.file"));
-    assertThat(groovyFileSystem.sourceFiles()).isEmpty();
-
-    fileSystem.add(new DefaultInputFile("", "fake.groovy").setLanguage(Groovy.KEY));
-    assertThat(groovyFileSystem.sourceFiles()).hasSize(1);
   }
 
   @Test
   public void inputFileFromRelativePath() {
     assertThat(groovyFileSystem.sourceInputFileFromRelativePath(null)).isNull();
 
-    fileSystem.add(new DefaultInputFile("", "fake1.file"));
+    fileSystem.add(TestInputFileBuilder.create("", "fake1.file").build());
     assertThat(groovyFileSystem.sourceInputFileFromRelativePath("fake1.file")).isNull();
 
-    fileSystem.add(new DefaultInputFile("", "fake2.file").setType(Type.MAIN).setLanguage(Groovy.KEY));
+    fileSystem.add(
+        TestInputFileBuilder.create("", "fake2.file")
+            .setType(Type.MAIN)
+            .setLanguage(Groovy.KEY)
+            .build());
     assertThat(groovyFileSystem.sourceInputFileFromRelativePath("fake2.file")).isNotNull();
 
-    fileSystem.add(new DefaultInputFile("", "org/sample/foo/fake3.file").setType(Type.MAIN).setLanguage(Groovy.KEY));
+    fileSystem.add(
+        TestInputFileBuilder.create("", "org/sample/foo/fake3.file")
+            .setType(Type.MAIN)
+            .setLanguage(Groovy.KEY)
+            .build());
     assertThat(groovyFileSystem.sourceInputFileFromRelativePath("foo/fake3.file")).isNotNull();
   }
 }

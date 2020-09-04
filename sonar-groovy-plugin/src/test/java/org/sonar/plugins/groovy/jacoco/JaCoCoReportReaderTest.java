@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -56,15 +56,8 @@ public class JaCoCoReportReaderTest {
   }
 
   @Test
-  public void not_existing_class_files_should_not_be_analyzed_for_current() {
+  public void notExistingClassFilesShouldNotBeAnalyzed() {
     File report = TestUtils.getResource("/org/sonar/plugins/groovy/jacoco/JaCoCo_incompatible_merge/jacoco-0.7.5.exec");
-    Collection<File> classFile = Arrays.asList(dummy);
-    new JaCoCoReportReader(report).analyzeFiles(null, classFile);
-  }
-
-  @Test
-  public void not_existing_class_files_should_not_be_analyzed_for_previous() {
-    File report = TestUtils.getResource("/org/sonar/plugins/groovy/jacoco/JaCoCo_incompatible_merge/jacoco-0.7.4.exec");
     Collection<File> classFile = Arrays.asList(dummy);
     new JaCoCoReportReader(report).analyzeFiles(null, classFile);
   }

@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,45 +19,46 @@
  */
 package org.sonar.plugins.groovy.jacoco;
 
+import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.sonar.plugins.groovy.TestUtils;
 
-import java.io.File;
-
 public class JaCoCoReportMergerTest {
 
-  @Rule
-  public TemporaryFolder testFolder = new TemporaryFolder();
+  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
-  public void merge_different_format_should_fail() {
-    exception.expect(IllegalStateException.class);
-    exception.expectMessage("You are trying to merge two different JaCoCo binary formats. Please use only one version of JaCoCo.");
+  public void mergeDifferentFormatShouldFail1() {
+    exception.expect(IllegalArgumentException.class);
+    exception.expectMessage(JaCoCoReportReader.INCOMPATIBLE_JACOCO_ERROR);
     merge("jacoco-0.7.5.exec", "jacoco-it-0.7.4.exec");
   }
 
   @Test
-  public void merge_different_format_should_fail_() {
-    exception.expect(IllegalStateException.class);
-    exception.expectMessage("You are trying to merge two different JaCoCo binary formats. Please use only one version of JaCoCo.");
+  public void mergeDifferentFormatShouldFail2() {
+    exception.expect(IllegalArgumentException.class);
+    exception.expectMessage(JaCoCoReportReader.INCOMPATIBLE_JACOCO_ERROR);
     merge("jacoco-0.7.4.exec", "jacoco-it-0.7.5.exec");
   }
 
   @Test
-  public void merge_same_format_should_not_fail() throws Exception {
+  public void merge_same_format_should_not_fail() {
     merge("jacoco-0.7.5.exec", "jacoco-it-0.7.5.exec");
   }
 
   private void merge(String file1, String file2) {
-    File current = TestUtils.getResource("/org/sonar/plugins/groovy/jacoco/JaCoCo_incompatible_merge/" + file1);
-    File previous = TestUtils.getResource("/org/sonar/plugins/groovy/jacoco/JaCoCo_incompatible_merge/" + file2);
-    JaCoCoReportMerger.mergeReports(new File(testFolder.getRoot(), "dummy"), current, previous);
+    File current =
+        TestUtils.getResource(
+            "/org/sonar/plugins/groovy/jacoco/JaCoCo_incompatible_merge/" + file1);
+    File previous =
+        TestUtils.getResource(
+            "/org/sonar/plugins/groovy/jacoco/JaCoCo_incompatible_merge/" + file2);
+    JaCoCoReportMerger.mergeReports(
+        testFolder.getRoot().toPath().resolve("dummy"), current, previous);
   }
-
 }

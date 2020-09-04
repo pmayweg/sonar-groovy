@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,15 +19,14 @@
  */
 package org.sonar.plugins.groovy.jacoco;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
 
 public class JaCoCoExtensionsTest {
 
   @Test
   public void testExtensions() {
-    assertThat(JaCoCoExtensions.getExtensions().size()).isEqualTo(7);
+    assertThat(JaCoCoExtensions.getExtensions().size()).isEqualTo(5);
   }
-
 }

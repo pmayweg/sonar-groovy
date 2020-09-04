@@ -1,7 +1,7 @@
 /*
  * Sonar Groovy Plugin
- * Copyright (C) 2010-2016 SonarSource SA
- * mailto:contact AT sonarsource DOT com
+ * Copyright (C) 2010-2019 SonarSource SA & Community
+ * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,39 +26,32 @@ import java.util.List;
 import java.util.Map;
 import javax.xml.stream.XMLStreamException;
 import org.apache.commons.lang.StringUtils;
-import org.sonar.api.batch.BatchSide;
+import org.sonar.api.batch.ScannerSide;
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FilePredicates;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
-import org.sonar.api.component.ResourcePerspectives;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.Metric;
-import org.sonar.api.test.MutableTestPlan;
-import org.sonar.api.test.TestCase;
 import org.sonar.api.utils.MessageException;
-import org.sonar.api.utils.ParsingUtils;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 import org.sonar.plugins.groovy.foundation.Groovy;
 import org.sonar.plugins.groovy.surefire.data.SurefireStaxHandler;
 import org.sonar.plugins.groovy.surefire.data.UnitTestClassReport;
 import org.sonar.plugins.groovy.surefire.data.UnitTestIndex;
-import org.sonar.plugins.groovy.surefire.data.UnitTestResult;
 import org.sonar.plugins.groovy.utils.StaxParser;
 
-@BatchSide
+@ScannerSide
 public class GroovySurefireParser {
 
   private static final Logger LOGGER = Loggers.get(GroovySurefireParser.class);
-  private final ResourcePerspectives perspectives;
   private final Groovy groovy;
   private final FileSystem fs;
 
-  public GroovySurefireParser(Groovy groovy, ResourcePerspectives perspectives, FileSystem fs) {
+  public GroovySurefireParser(Groovy groovy, FileSystem fs) {
     this.groovy = groovy;
-    this.perspectives = perspectives;
     this.fs = fs;
   }
 
@@ -131,7 +124,9 @@ public class GroovySurefireParser {
       }
     }
     if (negativeTimeTestNumber > 0) {
-      LOGGER.warn("There is {} test(s) reported with negative time by surefire, total duration may not be accurate.", negativeTimeTestNumber);
+      LOGGER.warn(
+          "There is {} test(s) reported with negative time by surefire, total duration may not be accurate.",
+          negativeTimeTestNumber);
     }
   }
 
@@ -141,34 +136,17 @@ public class GroovySurefireParser {
     saveMeasure(context, inputFile, CoreMetrics.TESTS, testsCount);
     saveMeasure(context, inputFile, CoreMetrics.TEST_ERRORS, report.getErrors());
     saveMeasure(context, inputFile, CoreMetrics.TEST_FAILURES, report.getFailures());
-    saveMeasure(context, inputFile, CoreMetrics.TEST_EXECUTION_TIME, report.getDurationMilliseconds());
-    int passedTests = testsCount - report.getErrors() - report.getFailures();
-    if (testsCount > 0) {
-      double percentage = (passedTests * 100D) / testsCount;
-      saveMeasure(context, inputFile, CoreMetrics.TEST_SUCCESS_DENSITY, ParsingUtils.scaleValue(percentage));
-    }
-    saveResults(inputFile, report);
-  }
-
-  protected void saveResults(InputFile testFile, UnitTestClassReport report) {
-    for (UnitTestResult unitTestResult : report.getResults()) {
-      MutableTestPlan testPlan = perspectives.as(MutableTestPlan.class, testFile);
-      if (testPlan != null) {
-        testPlan.addTestCase(unitTestResult.getName())
-          .setDurationInMs(Math.max(unitTestResult.getDurationMilliseconds(), 0))
-          .setStatus(TestCase.Status.of(unitTestResult.getStatus()))
-          .setMessage(unitTestResult.getMessage())
-          .setType(TestCase.TYPE_UNIT)
-          .setStackTrace(unitTestResult.getStackTrace());
-      }
-    }
+    saveMeasure(
+        context, inputFile, CoreMetrics.TEST_EXECUTION_TIME, report.getDurationMilliseconds());
   }
 
   protected InputFile getUnitTestInputFile(String classKey) {
     String fileName = StringUtils.replace(classKey, ".", "/");
     FilePredicates p = fs.predicates();
-    FilePredicate fileNamePredicates = getFileNamePredicateFromSuffixes(p, fileName, groovy.getFileSuffixes());
-    FilePredicate searchPredicate = p.and(p.and(p.hasLanguage(Groovy.KEY), p.hasType(InputFile.Type.TEST)), fileNamePredicates);
+    FilePredicate fileNamePredicates =
+        getFileNamePredicateFromSuffixes(p, fileName, groovy.getFileSuffixes());
+    FilePredicate searchPredicate =
+        p.and(p.and(p.hasLanguage(Groovy.KEY), p.hasType(InputFile.Type.TEST)), fileNamePredicates);
     if (fs.hasFiles(searchPredicate)) {
       return fs.inputFiles(searchPredicate).iterator().next();
     } else {
@@ -176,7 +154,8 @@ public class GroovySurefireParser {
     }
   }
 
-  private static FilePredicate getFileNamePredicateFromSuffixes(FilePredicates p, String fileName, String[] suffixes) {
+  private static FilePredicate getFileNamePredicateFromSuffixes(
+      FilePredicates p, String fileName, String[] suffixes) {
     List<FilePredicate> fileNamePredicates = new ArrayList<>(suffixes.length);
     for (String suffix : suffixes) {
       fileNamePredicates.add(p.matchesPathPattern("**/" + fileName + suffix));
@@ -184,8 +163,8 @@ public class GroovySurefireParser {
     return p.or(fileNamePredicates);
   }
 
-  private static <T extends Serializable> void saveMeasure(SensorContext context, InputFile inputFile, Metric<T> metric, T value) {
+  private static <T extends Serializable> void saveMeasure(
+      SensorContext context, InputFile inputFile, Metric<T> metric, T value) {
     context.<T>newMeasure().forMetric(metric).on(inputFile).withValue(value).save();
   }
-
 }
